@@ -1,10 +1,10 @@
-package com.licencjat.filesynchronizer.client.filesynchronizerclient;
+package com.licencjat.filesynchronizer.client;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class FileSynchronizerClientApplicationTests {
+class FileRQSynchronizerClientApplicationTests {
 
 	@Test
 	void contextLoads() {

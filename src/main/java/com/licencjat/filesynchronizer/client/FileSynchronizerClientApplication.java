@@ -1,4 +1,4 @@
-package com.licencjat.filesynchronizer.client.filesynchronizerclient;
+package com.licencjat.filesynchronizer.client;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
