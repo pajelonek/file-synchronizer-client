@@ -1,7 +1,7 @@
 package com.licencjat.filesynchronizer.client.model;
 
+
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
@@ -13,36 +13,36 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-        "name",
-        "fileRQList"
+        "filePath",
+        "lastModified"
 })
-public class UpdateFilesRQ {
+public class FileRQList {
 
-    @JsonProperty("name")
-    private String name;
-    @JsonProperty("fileRQList")
-    private List<FileRQList> fileRQList = null;
+    @JsonProperty("filePath")
+    private String filePath;
+    @JsonProperty("lastModified")
+    private String lastModified;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
-    @JsonProperty("name")
-    public String getName() {
-        return name;
+    @JsonProperty("filePath")
+    public String getFilePath() {
+        return filePath;
     }
 
-    @JsonProperty("name")
-    public void setName(String name) {
-        this.name = name;
+    @JsonProperty("filePath")
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
     }
 
-    @JsonProperty("fileRQList")
-    public List<FileRQList> getFileRQList() {
-        return fileRQList;
+    @JsonProperty("lastModified")
+    public String getLastModified() {
+        return lastModified;
     }
 
-    @JsonProperty("fileRQList")
-    public void setFileRQList(List<FileRQList> fileRQList) {
-        this.fileRQList = fileRQList;
+    @JsonProperty("lastModified")
+    public void setLastModified(String lastModified) {
+        this.lastModified = lastModified;
     }
 
     @JsonAnyGetter
