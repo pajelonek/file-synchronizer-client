@@ -37,7 +37,7 @@ public class TestApplication {
     public void updateFilesTestConnectivity() throws IOException {
         final String uri = "http://localhost:8888/updateFiles";
 
-        File file = new File("C:/Users/SG0306258/OneDrive - Sabre/Desktop/testDirectory/test.txt");
+        File file = new File("C:/Users/SG0306258/OneDrive - Sabre/Desktop/testDirectory/test1.txt");
         File file2 = new File("C:/Users/SG0306258/OneDrive - Sabre/Desktop/testDirectory/test2.txt");
 
         List<FileRQList> listOfFileRQLists = new ArrayList<>();
