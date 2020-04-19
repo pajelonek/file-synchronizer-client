@@ -22,6 +22,8 @@ public class FileRQList {
     private String filePath;
     @JsonProperty("lastModified")
     private String lastModified;
+    @JsonProperty("action")
+    private String action;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -43,6 +45,16 @@ public class FileRQList {
     @JsonProperty("lastModified")
     public void setLastModified(String lastModified) {
         this.lastModified = lastModified;
+    }
+
+    @JsonProperty("action")
+    public String getAction() {
+        return action;
+    }
+
+    @JsonProperty("action")
+    public void setAction(String action) {
+        this.action = action;
     }
 
     @JsonAnyGetter
