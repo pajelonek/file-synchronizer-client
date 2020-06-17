@@ -1,5 +1,9 @@
 package com.licencjat.filesynchronizer.client.components;
 
+import com.licencjat.filesynchronizer.client.model.UpdateFile;
+import com.licencjat.filesynchronizer.client.rsync.RSyncFileUpdaterProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.devtools.filewatch.ChangedFile;
 import org.springframework.boot.devtools.filewatch.ChangedFiles;
@@ -12,6 +16,7 @@ import java.nio.channels.FileLock;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -19,21 +24,29 @@ import java.util.Set;
 public class MyFileChangeListener implements FileChangeListener {
 
     @Autowired
+    RSyncFileUpdaterProvider rSyncFileUpdaterProvider;
+
+    @Autowired
     FileUpdaterRequestSender fileUpdaterRequestSender;
+
+    Logger logger = LoggerFactory.getLogger(MyFileChangeListener.class);
+
 
     @Override
     public void onChange(Set<ChangedFiles> changeSet) {
         Map<String,ChangedFile.Type> updatedFiles = new HashMap<>();
-        for(ChangedFiles cfiles : changeSet) {
-            for(ChangedFile cfile: cfiles.getFiles()) {
-                if((cfile.getType().equals(ChangedFile.Type.MODIFY) || cfile.getType().equals(ChangedFile.Type.ADD) || cfile.getType().equals(ChangedFile.Type.DELETE)) && !isLocked(cfile.getFile().toPath())) {
-                    System.out.println("Done writing: "+cfile.getFile().getName());
-                    updatedFiles.put(cfile.getFile().getPath(),cfile.getType());
+        for(ChangedFiles changedfiles : changeSet) {
+            for(ChangedFile changedFile: changedfiles.getFiles()) {
+                if((changedFile.getType().equals(ChangedFile.Type.MODIFY) || changedFile.getType().equals(ChangedFile.Type.ADD) && !isLocked(changedFile.getFile().toPath())) || changedFile.getType().equals(ChangedFile.Type.DELETE)) {
+                    logger.info("Changed file: {}",changedFile.getFile().getName());
+                    updatedFiles.put(changedFile.getFile().getPath(),changedFile.getType());
                 }
             }
         }
-//        fileUpdaterRequestSender.process(updatedFiles);
+        List<UpdateFile> fileToUpdate = rSyncFileUpdaterProvider.mapToFileRQList(updatedFiles);
+        rSyncFileUpdaterProvider.processForServer(fileToUpdate);
     }
+
 
     private boolean isLocked(Path path) {
         try (FileChannel ch = FileChannel.open(path, StandardOpenOption.WRITE); FileLock lock = ch.tryLock()) {

@@ -14,14 +14,20 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
         "name",
-        "fileRQList"
+        "host",
+        "mainFolder",
+        "fileRQList",
 })
 public class UpdateFilesRQ {
 
     @JsonProperty("name")
     private String name;
+    @JsonProperty("host")
+    private String host;
+    @JsonProperty("mainFolder")
+    private String mainFolder;
     @JsonProperty("fileRQList")
-    private List<FileRQList> fileRQList = null;
+    private List<UpdateFile> updateFile = null;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -35,14 +41,34 @@ public class UpdateFilesRQ {
         this.name = name;
     }
 
-    @JsonProperty("fileRQList")
-    public List<FileRQList> getFileRQList() {
-        return fileRQList;
+    @JsonProperty("host")
+    public String getHost() {
+        return host;
+    }
+
+    @JsonProperty("host")
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+    @JsonProperty("mainFolder")
+    public String getMainFolder() {
+        return mainFolder;
+    }
+
+    @JsonProperty("mainFolder")
+    public void setMainFolder(String mainFolder) {
+        this.mainFolder = mainFolder;
     }
 
     @JsonProperty("fileRQList")
-    public void setFileRQList(List<FileRQList> fileRQList) {
-        this.fileRQList = fileRQList;
+    public List<UpdateFile> getUpdateFile() {
+        return updateFile;
+    }
+
+    @JsonProperty("fileRQList")
+    public void setUpdateFile(List<UpdateFile> updateFile) {
+        this.updateFile = updateFile;
     }
 
     @JsonAnyGetter
