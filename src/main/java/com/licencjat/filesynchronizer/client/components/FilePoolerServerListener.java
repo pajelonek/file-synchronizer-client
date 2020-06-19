@@ -27,6 +27,9 @@ public class FilePoolerServerListener implements Runnable{
     @Autowired
     RSyncFileUpdaterProvider rSyncFileUpdaterProvider;
 
+    @Autowired
+    MyFileChangeListener myFileChangeListener;
+
     @Value("${client.name}")
     private String hostName;
 
@@ -39,13 +42,13 @@ public class FilePoolerServerListener implements Runnable{
     @Autowired
     FileSystemWatcher fileSystemWatcher;
     @Override
-    @Scheduled(initialDelay = 0, fixedRate = 30000)
+    @Scheduled(fixedDelay = 5000)
     public void run() {
         if(enabled.get()) {
             ResponseEntity<FileLogger> fileLoggerResponseEntity = fileUpdaterRequestSender.getServerLogFile();
             List<UpdateFile> filesToProcessOnClient =  processForNewFiles(Objects.requireNonNull(fileLoggerResponseEntity.getBody()).getLogFileList());
             if(!filesToProcessOnClient.isEmpty()) {
-                fileSystemWatcher.stop();
+                myFileChangeListener.ignoreUpEvents();
                 logger.info("FileSystemWatcher stopped");
                 List<UpdateFile> filesToUpdateOnClient = getFilesToUpdateOnClient(filesToProcessOnClient);
                 logger.info("Found {} added/modified files to update on client", filesToProcessOnClient.size());

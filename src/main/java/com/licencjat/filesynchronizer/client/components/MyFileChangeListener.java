@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Component
 public class MyFileChangeListener implements FileChangeListener {
@@ -31,20 +32,23 @@ public class MyFileChangeListener implements FileChangeListener {
 
     Logger logger = LoggerFactory.getLogger(MyFileChangeListener.class);
 
+    private AtomicBoolean enabled = new AtomicBoolean(true);
 
     @Override
     public void onChange(Set<ChangedFiles> changeSet) {
-        Map<String,ChangedFile.Type> updatedFiles = new HashMap<>();
-        for(ChangedFiles changedfiles : changeSet) {
-            for(ChangedFile changedFile: changedfiles.getFiles()) {
-                if((changedFile.getType().equals(ChangedFile.Type.MODIFY) || changedFile.getType().equals(ChangedFile.Type.ADD) && !isLocked(changedFile.getFile().toPath())) || changedFile.getType().equals(ChangedFile.Type.DELETE)) {
-                    logger.info("Changed file: {}",changedFile.getFile().getName());
-                    updatedFiles.put(changedFile.getFile().getPath(),changedFile.getType());
+        if(enabled.get()) {
+            Map<String, ChangedFile.Type> updatedFiles = new HashMap<>();
+            for (ChangedFiles changedfiles : changeSet) {
+                for (ChangedFile changedFile : changedfiles.getFiles()) {
+                    if ((changedFile.getType().equals(ChangedFile.Type.MODIFY) || changedFile.getType().equals(ChangedFile.Type.ADD) && !isLocked(changedFile.getFile().toPath())) || changedFile.getType().equals(ChangedFile.Type.DELETE)) {
+                        logger.info("Changed file: {}", changedFile.getFile().getName());
+                        updatedFiles.put(changedFile.getFile().getPath(), changedFile.getType());
+                    }
                 }
             }
-        }
-        List<UpdateFile> fileToUpdate = rSyncFileUpdaterProvider.mapToFileRQList(updatedFiles);
-        rSyncFileUpdaterProvider.processForServer(fileToUpdate);
+            List<UpdateFile> fileToUpdate = rSyncFileUpdaterProvider.mapToFileRQList(updatedFiles);
+            rSyncFileUpdaterProvider.processForServer(fileToUpdate);
+        } else enabled.set(true);
     }
 
 
@@ -54,6 +58,10 @@ public class MyFileChangeListener implements FileChangeListener {
         } catch (IOException e) {
             return true;
         }
+    }
+
+    public void ignoreUpEvents(){
+        enabled.set(false);
     }
 
 }
