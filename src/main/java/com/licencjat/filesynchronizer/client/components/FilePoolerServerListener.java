@@ -56,6 +56,7 @@ public class FilePoolerServerListener implements Runnable{
                 fileSystemWatcher.start();
                 logger.info("FileSystemWatcher started");
             }
+            setLastSynchronizedTime(String.valueOf(fileLoggerResponseEntity.getBody().getCurrentTime()));
         }
     }
 
