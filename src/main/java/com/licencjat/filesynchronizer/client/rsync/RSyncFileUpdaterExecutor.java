@@ -27,7 +27,9 @@ public class RSyncFileUpdaterExecutor {
                     .outputCommandline(true)
                     .destination(destination)
                     .verbose(true)
+                    .protectArgs(true)
                     .compress(true)
+//                    .debug("ALL")
                     .archive(true)
                     .rsh("ssh"/*"C:\\rsync4j\\bin\\ssh.exe"Binaries.sshBinary()+ " -i " + Binaries.convertPath(sshPrivateKeyPath)*/);
 
