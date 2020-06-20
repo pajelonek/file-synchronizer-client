@@ -5,6 +5,7 @@ import com.licencjat.filesynchronizer.client.rsync.RSyncFileUpdaterProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.devtools.filewatch.ChangedFile;
 import org.springframework.boot.devtools.filewatch.ChangedFiles;
 import org.springframework.boot.devtools.filewatch.FileChangeListener;
@@ -15,11 +16,8 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 public class MyFileChangeListener implements FileChangeListener {
@@ -30,25 +28,53 @@ public class MyFileChangeListener implements FileChangeListener {
     @Autowired
     FileUpdaterRequestSender fileUpdaterRequestSender;
 
+    @Value("${user.local.directory}")
+    private String userLocalDirectory;
+
     Logger logger = LoggerFactory.getLogger(MyFileChangeListener.class);
 
-    private AtomicBoolean enabled = new AtomicBoolean(true);
+    List<UpdateFile> filesFromServer = new ArrayList<>();
 
     @Override
     public void onChange(Set<ChangedFiles> changeSet) {
-        if(enabled.get()) {
+        List<ChangedFile> filterredFiles = clearChangeSetFromFilesFromServer(changeSet);
             Map<String, ChangedFile.Type> updatedFiles = new HashMap<>();
-            for (ChangedFiles changedfiles : changeSet) {
-                for (ChangedFile changedFile : changedfiles.getFiles()) {
+                for (ChangedFile changedFile : filterredFiles) {
                     if ((changedFile.getType().equals(ChangedFile.Type.MODIFY) || changedFile.getType().equals(ChangedFile.Type.ADD) && !isLocked(changedFile.getFile().toPath())) || changedFile.getType().equals(ChangedFile.Type.DELETE)) {
                         logger.info("Changed file: {}", changedFile.getFile().getName());
                         updatedFiles.put(changedFile.getFile().getPath(), changedFile.getType());
                     }
                 }
-            }
+
             List<UpdateFile> fileToUpdate = rSyncFileUpdaterProvider.mapToFileRQList(updatedFiles);
             rSyncFileUpdaterProvider.processForServer(fileToUpdate);
-        } else enabled.set(true);
+    }
+
+    private List<ChangedFile> clearChangeSetFromFilesFromServer(Set<ChangedFiles> changeSet) {
+        List<String> changedFilesPaths = changeSet.stream()
+                .map(ChangedFiles::getFiles)
+                .flatMap(Collection::stream)
+                .map(file -> file.getFile().getPath().replace(userLocalDirectory,""))
+                .collect(Collectors.toList());
+
+        List<String> filesToDeleteFromBuffer = new ArrayList<>();
+
+        for(UpdateFile file : filesFromServer){
+            if(changedFilesPaths.contains(file.getFilePath())){
+             filesToDeleteFromBuffer.add(userLocalDirectory + file.getFilePath());
+            }
+        }
+
+        filesFromServer = filesFromServer.stream()
+                .filter(file1 -> !filesToDeleteFromBuffer.contains(userLocalDirectory + file1.getFilePath()))
+                .collect(Collectors.toList());
+
+
+        return changeSet.stream()
+                .map(ChangedFiles::getFiles)
+                .flatMap(Collection::stream)
+                .filter(file -> !filesToDeleteFromBuffer.contains(file.getFile().getPath()))
+                .collect(Collectors.toList());
     }
 
 
@@ -60,8 +86,8 @@ public class MyFileChangeListener implements FileChangeListener {
         }
     }
 
-    public void ignoreUpEvents(){
-        enabled.set(false);
+    public void addFilesFromServer(List<UpdateFile> updateFileList){
+        this.filesFromServer.addAll(updateFileList);
     }
 
 }

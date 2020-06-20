@@ -48,7 +48,7 @@ public class FilePoolerServerListener implements Runnable{
             ResponseEntity<FileLogger> fileLoggerResponseEntity = fileUpdaterRequestSender.getServerLogFile();
             List<UpdateFile> filesToProcessOnClient =  processForNewFiles(Objects.requireNonNull(fileLoggerResponseEntity.getBody()).getLogFileList());
             if(!filesToProcessOnClient.isEmpty()) {
-                myFileChangeListener.ignoreUpEvents();
+                myFileChangeListener.addFilesFromServer(filesToProcessOnClient);
                 logger.info("FileSystemWatcher stopped");
                 List<UpdateFile> filesToUpdateOnClient = getFilesToUpdateOnClient(filesToProcessOnClient);
                 logger.info("Found {} added/modified files to update on client", filesToProcessOnClient.size());
@@ -56,7 +56,6 @@ public class FilePoolerServerListener implements Runnable{
                 List<UpdateFile> filesToDeleteOnClient = getFilesToDeleteOnClient(filesToProcessOnClient);
                 logger.info("Found {} deleted files to update on client", filesToDeleteOnClient.size());
                 rSyncFileUpdaterProvider.deleteOnClient(filesToDeleteOnClient);
-                fileSystemWatcher.start();
                 logger.info("FileSystemWatcher started");
             }
             setLastSynchronizedTime(String.valueOf(fileLoggerResponseEntity.getBody().getCurrentTime()));
