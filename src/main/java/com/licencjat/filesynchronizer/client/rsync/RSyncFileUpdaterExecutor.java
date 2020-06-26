@@ -1,9 +1,7 @@
 package com.licencjat.filesynchronizer.client.rsync;
 
-import com.github.fracpete.processoutput4j.output.CollectingProcessOutput;
 import com.github.fracpete.processoutput4j.output.StreamingProcessOutput;
 import com.github.fracpete.rsync4j.RSync;
-import com.github.fracpete.rsync4j.core.Binaries;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,30 +12,34 @@ import java.util.List;
 @Component
 public class RSyncFileUpdaterExecutor {
 
+    @Value("${rsync.remote.shell}")
+    private String rsh;
+
     Logger logger = LoggerFactory.getLogger(RSyncFileUpdaterExecutor.class);
 
-    List<String> sources;
-    String destination;
-    RSync rSync = new RSync();
+    private RSync rSync = new RSync();
+    private List<String> sources;
+    private String destination;
 
+    //todo check if rsh should be /*"C:\\rsync4j\\bin\\ssh.exe"Binaries.sshBinary()+ " -i " + Binaries.convertPath(sshPrivateKeyPath)*/
     public void execute() {
         try {
             rSync
                     .sources(sources)
-                    .outputCommandline(true)
                     .destination(destination)
+                    .outputCommandline(true)
                     .verbose(true)
                     .protectArgs(true)
                     .compress(true)
-//                    .debug("ALL")
                     .archive(true)
-                    .rsh("ssh"/*"C:\\rsync4j\\bin\\ssh.exe"Binaries.sshBinary()+ " -i " + Binaries.convertPath(sshPrivateKeyPath)*/);
+                    .rsh(rsh);
 
             StreamingProcessOutput output = new StreamingProcessOutput(new RsyncOutput());
             output.monitor(rSync.builder());
+
             if (output.getExitCode() > 0) {
                 throw new Error("Error while executing rsync");
-            } else logger.info("Successfully modified {} on server", sources.toString());
+            } else logger.info("Successfully modified {}", sources.toString());
 
         } catch (Exception exception) {
             logger.error(exception.getMessage());
@@ -45,12 +47,10 @@ public class RSyncFileUpdaterExecutor {
         }
     }
 
-
     public RSyncFileUpdaterExecutor setSources(List<String> sources) {
         this.sources = sources;
         return this;
     }
-
 
     public RSyncFileUpdaterExecutor setDestination(String destination) {
         this.destination = destination;
