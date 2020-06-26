@@ -2,8 +2,6 @@ package com.licencjat.filesynchronizer.client.model;
 
 import com.fasterxml.jackson.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -14,19 +12,21 @@ import java.util.Map;
         "action"
 })
 public class LogFile {
+
     @JsonProperty("host")
     private String host;
+
     @JsonProperty("filePath")
     private String filePath;
+
     @JsonProperty("timeOfChange")
     private String timeOfChange;
+
     @JsonProperty("lastModified")
     private String lastModified;
+
     @JsonProperty("action")
     private String action;
-
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     @JsonProperty("host")
     public String getHost() {
@@ -78,13 +78,4 @@ public class LogFile {
         this.action = action;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
 }
