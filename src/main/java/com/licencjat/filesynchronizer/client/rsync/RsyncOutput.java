@@ -15,9 +15,9 @@ public class RsyncOutput implements StreamingProcessOwner {
 
     public void processOutput(String line, boolean stdout) {
         if (stdout) {
-            logger.info(line);
+            logger.info("RSYNC: " + line);
         } else {
-            logger.error(line);
+            logger.error("RSYNC: " + line);
         }
     }
 }
