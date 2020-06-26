@@ -6,7 +6,6 @@ import com.licencjat.filesynchronizer.client.model.UpdateFile;
 import com.licencjat.filesynchronizer.client.rsync.RSyncFileUpdaterProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.devtools.filewatch.FileSystemWatcher;
 import org.springframework.http.ResponseEntity;
@@ -21,14 +20,13 @@ import java.util.stream.Collectors;
 @Service
 public class FilePoolerServerListener implements Runnable{
 
-    @Autowired
-    FileUpdaterRequestSender fileUpdaterRequestSender;
+    final FileUpdaterRequestSender fileUpdaterRequestSender;
 
-    @Autowired
-    RSyncFileUpdaterProvider rSyncFileUpdaterProvider;
+    final RSyncFileUpdaterProvider rSyncFileUpdaterProvider;
 
-    @Autowired
-    MyFileChangeListener myFileChangeListener;
+    final MyFileChangeListener myFileChangeListener;
+
+    final FileSystemWatcher fileSystemWatcher;
 
     @Value("${client.name}")
     private String hostName;
@@ -39,57 +37,61 @@ public class FilePoolerServerListener implements Runnable{
 
     Logger logger = LoggerFactory.getLogger(FilePoolerServerListener.class);
 
-    @Autowired
-    FileSystemWatcher fileSystemWatcher;
+    public FilePoolerServerListener(FileUpdaterRequestSender fileUpdaterRequestSender, RSyncFileUpdaterProvider rSyncFileUpdaterProvider, MyFileChangeListener myFileChangeListener, FileSystemWatcher fileSystemWatcher) {
+        this.fileUpdaterRequestSender = fileUpdaterRequestSender;
+        this.rSyncFileUpdaterProvider = rSyncFileUpdaterProvider;
+        this.myFileChangeListener = myFileChangeListener;
+        this.fileSystemWatcher = fileSystemWatcher;
+    }
+
     @Override
-    @Scheduled(fixedDelay = 5000)
+    @Scheduled(fixedDelay = 3000)
     public void run() {
         if(enabled.get()) {
             ResponseEntity<FileLogger> fileLoggerResponseEntity = fileUpdaterRequestSender.getServerLogFile();
             List<UpdateFile> filesToProcessOnClient =  processForNewFiles(Objects.requireNonNull(fileLoggerResponseEntity.getBody()).getLogFileList());
+
             if(!filesToProcessOnClient.isEmpty()) {
-                myFileChangeListener.addFilesFromServer(filesToProcessOnClient);
-                logger.info("FileSystemWatcher stopped");
+                myFileChangeListener.addFilesFromServerToBuffer(filesToProcessOnClient);
                 List<UpdateFile> filesToUpdateOnClient = getFilesToUpdateOnClient(filesToProcessOnClient);
                 logger.info("Found {} added/modified files to update on client", filesToProcessOnClient.size());
                 rSyncFileUpdaterProvider.processOnClient(filesToUpdateOnClient);
+
                 List<UpdateFile> filesToDeleteOnClient = getFilesToDeleteOnClient(filesToProcessOnClient);
-                logger.info("Found {} deleted files to update on client", filesToDeleteOnClient.size());
+                logger.info("Found {} files to delete on client", filesToDeleteOnClient.size());
                 rSyncFileUpdaterProvider.deleteOnClient(filesToDeleteOnClient);
-                logger.info("FileSystemWatcher started");
             }
+
             setLastSynchronizedTime(String.valueOf(fileLoggerResponseEntity.getBody().getCurrentTime()));
         }
     }
 
-    private List<UpdateFile> getFilesToDeleteOnClient(List<UpdateFile> filesToProcessOnClient) {
+    public List<UpdateFile> getFilesToDeleteOnClient(List<UpdateFile> filesToProcessOnClient) {
         return filesToProcessOnClient.stream()
                 .filter(updateFile -> updateFile.getAction().equals("DELETE"))
                 .collect(Collectors.toList());
     }
 
-    private List<UpdateFile> getFilesToUpdateOnClient(List<UpdateFile> filesToProcessOnClient) {
+    public List<UpdateFile> getFilesToUpdateOnClient(List<UpdateFile> filesToProcessOnClient) {
         return filesToProcessOnClient.stream()
                 .filter(updateFile -> updateFile.getAction().equals("ADD") || updateFile.getAction().equals("MODIFY"))
                 .collect(Collectors.toList());
     }
 
-    //todo make more gallant
-    private List<UpdateFile> processForNewFiles(List<LogFile> logFileList) {
+    public List<UpdateFile> processForNewFiles(List<LogFile> logFileList) {
         Set<String> set = new TreeSet<>();
-        List<UpdateFile> logFileToParse = new ArrayList<>();
+        List<UpdateFile> logFileListToParse = new ArrayList<>();
         Collections.reverse(logFileList);
         logFileList.stream()
                 .filter(fileLog -> !fileLog.getHost().equals(hostName))
                 .filter(fileLog -> Long.parseLong(fileLog.getTimeOfChange()) > Long.parseLong(lastSynchronizedTime))
                 .forEach(logFile -> {
                     if(!set.contains(logFile.getFilePath())){
-                        logFileToParse.add(mapToUpdateFileObject(logFile));
+                        logFileListToParse.add(mapToUpdateFileObject(logFile));
                         set.add(logFile.getFilePath());
                     }
                 });
-        logger.info("Found {} changes on server to update on client", logFileToParse.size());
-        return logFileToParse;
+        return logFileListToParse;
     }
 
     private UpdateFile mapToUpdateFileObject(LogFile logFile) {
@@ -115,6 +117,7 @@ public class FilePoolerServerListener implements Runnable{
     public void triggerPoolerService(){
         enabled.set(true);
     }
+
     public void stopPoolerService(){
         enabled.set(false);
     }

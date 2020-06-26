@@ -45,23 +45,21 @@ public class FileUpdaterRequestSender {
     @Value("${file.synchronizer.logfile.endpoint}")
     private String logFileEndpoint;
 
-    RestTemplate restTemplate = new RestTemplate();
+    private RestTemplate restTemplate = new RestTemplate();
 
-    Logger logger = LoggerFactory.getLogger(FileUpdaterRequestSender.class);
+    private Logger logger = LoggerFactory.getLogger(FileUpdaterRequestSender.class);
 
     public void removeFilesOnServer(List<UpdateFile> updateFile) {
-        if(updateFile.size() > 0) {
-            HttpEntity<UpdateFilesRQ> updateFilesRQHttpEntity = createUpdateFilesRQEntity(updateFile);
+        if (updateFile.size() > 0) {
+            HttpEntity<UpdateFilesRQ> updateFilesRQHttpEntity = createUpdateFilesRequest(updateFile);
             ResponseEntity<UpdateFilesRS> updateFilesResponseEntity = restTemplate.postForEntity(serverAddress + removeFilesEndpoint, updateFilesRQHttpEntity, UpdateFilesRS.class);
-            if(updateFilesResponseEntity.getStatusCode().value() == 200){
+            if (updateFilesResponseEntity.getStatusCode().value() == 200) {
                 logger.info("Successfully removed files on server");
-
             } else throw new Error("Could not remove files on server");
         }
     }
-
+    //todo check if UPDATEFILESRS ma byc
     public ResponseEntity<UpdateFilesRQ> getServerFileList() {
-        logger.info("Getting fileList from server");
         ResponseEntity<UpdateFilesRQ> getFileListRSResponseEntity = restTemplate.getForEntity(serverAddress + fileListEndpoint, UpdateFilesRQ.class);
         if (getFileListRSResponseEntity.getStatusCodeValue() == 200) {
             logger.info("Successfully received fileList from server");
@@ -69,17 +67,17 @@ public class FileUpdaterRequestSender {
 
         return getFileListRSResponseEntity;
     }
-    //todo add host to work
+
     public void updateDateModification(List<UpdateFile> updateFile) {
         logger.info("Updating modification date on server for {}", updateFile.toString());
-        HttpEntity<UpdateFilesRQ> updateFilesRQHttpEntity = createUpdateFilesRQEntity(updateFile);
+        HttpEntity<UpdateFilesRQ> updateFilesRQHttpEntity = createUpdateFilesRequest(updateFile);
         ResponseEntity<UpdateFilesRS> updateFilesResponseEntity = restTemplate.postForEntity(serverAddress + setModificationDateEndpoint, updateFilesRQHttpEntity, UpdateFilesRS.class);
-        if(updateFilesResponseEntity.getStatusCode().value() == 200){
+        if (updateFilesResponseEntity.getStatusCode().value() == 200) {
             logger.info("Successfully updated modification date on server");
-        }else throw new Error("Could not update modification date on server");
+        } else throw new Error("Could not update modification date on server");
     }
 
-    private HttpEntity<UpdateFilesRQ> createUpdateFilesRQEntity(List<UpdateFile> updateFile) {
+    public HttpEntity<UpdateFilesRQ> createUpdateFilesRequest(List<UpdateFile> updateFile) {
         UpdateFilesRQ updateFilesRQ = new UpdateFilesRQ();
         updateFilesRQ.setName("UpdateFilesRQ");
         updateFilesRQ.setHost(host);
@@ -94,12 +92,9 @@ public class FileUpdaterRequestSender {
     }
 
     public ResponseEntity<FileLogger> getServerLogFile() {
-        logger.info("Getting LogFile from server");
         ResponseEntity<FileLogger> getLogFileResponseEntity = restTemplate.getForEntity(serverAddress + logFileEndpoint, FileLogger.class);
-        if (getLogFileResponseEntity.getStatusCodeValue() == 200) {
-            logger.info("Successfully received logFile from server");
-        } else throw new Error("Could not obtain logFile from server, check your connectivity to the server");
-
+        if (getLogFileResponseEntity.getStatusCodeValue() != 200)
+            throw new Error("Could not obtain logFile from server, check your connectivity to the server");
         return getLogFileResponseEntity;
     }
 }
