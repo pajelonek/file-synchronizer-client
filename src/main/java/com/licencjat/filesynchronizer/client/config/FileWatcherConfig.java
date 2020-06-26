@@ -17,8 +17,11 @@ public class FileWatcherConfig {
     @Value("${user.local.directory}")
     private String userLocalDirectory;
 
-    @Autowired
-    MyFileChangeListener myFileChangeListener;
+    final MyFileChangeListener myFileChangeListener;
+
+    public FileWatcherConfig(MyFileChangeListener myFileChangeListener) {
+        this.myFileChangeListener = myFileChangeListener;
+    }
 
     @Bean
     public FileSystemWatcher fileSystemWatcher() {
