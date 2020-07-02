@@ -27,7 +27,6 @@ public class FilePoolerServerListener implements Runnable {
     final MyFileChangeListener myFileChangeListener;
 
     final FileSystemWatcher fileSystemWatcher;
-    //TODO ADD CLEANER FOR FILESFROMSERVER!!!!!!!!!!!!!
 
     @Value("${client.name}")
     private String hostName;
@@ -67,7 +66,7 @@ public class FilePoolerServerListener implements Runnable {
                 logger.info("Found {} files to delete on client", filesToDeleteOnClient.size());
                 rSyncFileUpdaterProvider.deleteOnClient(filesToDeleteOnClient);
             }
-
+            myFileChangeListener.cleanUpFilesFromServer(Long.parseLong(fileLoggerResponseEntity.getBody().getCurrentTime()));
             setLastSynchronizedTime(String.valueOf(fileLoggerResponseEntity.getBody().getCurrentTime()));
         }
     }
