@@ -273,8 +273,6 @@ public class RSyncFileUpdaterProvider {
         fileUpdaterRequestSender.updateDateModification(updateFile);
     }
 
-    //todo think about != instead of <
-
     /**
      * This method validates if file from the server is present in the client directory, if it finds same file
      * it compare their modification dates and returns true if file from server is newer
