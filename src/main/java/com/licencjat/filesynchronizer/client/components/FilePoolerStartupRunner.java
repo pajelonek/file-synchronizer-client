@@ -60,11 +60,11 @@ public class FilePoolerStartupRunner implements ApplicationListener<ApplicationR
     /**
      * This event is executed as late as conceivably possible to indicate that
      * the application is ready to service requests.
-     *
+     * <p>
      * After successful start of the application we collect list of all the files from
      * our directory with the ones on our server-side application and then we pass it to the rSyncFileUpdateProvider
      * for further actions.
-     *
+     * <p>
      * After comparing files, method starts FileSystemWatcher component and FilePoolerServerListener service.
      */
     @Override
@@ -89,8 +89,8 @@ public class FilePoolerStartupRunner implements ApplicationListener<ApplicationR
     }
 
     /**
-     *  This method simply creates a list of UpdateFile objects, then runs recursive method which list
-     *  all of the files in client directory which we returns.
+     * This method simply creates a list of UpdateFile objects, then runs recursive method which list
+     * all of the files in client directory which we returns.
      *
      * @return the list of UpdateFile objects which represents files in the client directory
      */
@@ -102,6 +102,7 @@ public class FilePoolerStartupRunner implements ApplicationListener<ApplicationR
 
     /**
      * This method cuts prefix of file paths because prefix is not guaranteed to be equal on server and client
+     *
      * @param path to the file
      * @return path without its prefix
      */
@@ -114,8 +115,9 @@ public class FilePoolerStartupRunner implements ApplicationListener<ApplicationR
      * During going over files it creates an UpdateFile object from the file and add this to the list of UpdateFile
      * objects provided as parameters.
      * If it encounters directory, it recursively goes to encountered directory.
-     * @param path to the current directory which is being listed of all files
-     * @param updateFileList which contains informations of all encountered files
+     *
+     * @param path           to the current directory which is being listed of all files
+     * @param updateFileList which contains information of all encountered files
      */
     public void listFilesFromDirectory(Path path, List<UpdateFile> updateFileList) {
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {

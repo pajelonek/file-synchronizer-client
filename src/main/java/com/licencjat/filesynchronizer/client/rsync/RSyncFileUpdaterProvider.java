@@ -73,6 +73,7 @@ public class RSyncFileUpdaterProvider {
 
     /**
      * This method its the logic which leads on making changes on the server.
+     *
      * @param clientFileList is the list of changed files from client directory
      */
     public void processForServer(List<UpdateFile> clientFileList) {
@@ -94,6 +95,7 @@ public class RSyncFileUpdaterProvider {
      * This method deletes files on client directory based on param.
      * It checks is file is present, this is basic validation for this case, if is we deletes it with
      * method from File class.
+     *
      * @param filesToDeleteOnClientList is list of all files to delete on client.
      */
     public void deleteOnClient(List<UpdateFile> filesToDeleteOnClientList) {
@@ -109,6 +111,7 @@ public class RSyncFileUpdaterProvider {
     /**
      * This method filters list of the files from server and based on the validation method return files
      * which should be deleted on the client directory.
+     *
      * @param serverFileList is the list of all files from server directory
      * @param clientFileList is the list of all files from client directory
      * @return list of files to delete on client directory
@@ -207,6 +210,7 @@ public class RSyncFileUpdaterProvider {
     /**
      * This method change modification date on client directory for the provided files
      * in the way that they will match with server directory.
+     *
      * @param clientFileList is the list of files to update modification date.
      */
     public void updateFileModificationDateOnClient(List<UpdateFile> clientFileList) {
@@ -222,6 +226,7 @@ public class RSyncFileUpdaterProvider {
     /**
      * This method filters and splits files from @param in the way that in each loop serverFileList elements have
      * the same destination folder and will be updated on server at the same time.
+     *
      * @param filesToSendToServerList is the files from client to send to server
      */
     public void processOnServer(List<UpdateFile> filesToSendToServerList) {
@@ -232,8 +237,9 @@ public class RSyncFileUpdaterProvider {
 
     /**
      * This method maps @params as sources and destination to send files from updateFileList to the server directory.
+     *
      * @param updateFileList is the list of sources from same destination directory to send to server
-     * @param prefixOfPath is the prefix of path to the folder that matchees all updateFileList element
+     * @param prefixOfPath   is the prefix of path to the folder that matchees all updateFileList element
      */
     private void modifyFileOnServer(List<UpdateFile> updateFileList, String prefixOfPath) {
         List<String> sources = updateFileList.stream()

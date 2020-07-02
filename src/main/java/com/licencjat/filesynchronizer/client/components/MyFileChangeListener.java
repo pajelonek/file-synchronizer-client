@@ -63,13 +63,14 @@ public class MyFileChangeListener implements FileChangeListener {
     /**
      * This method filters changeFiles set with the buffer of changes from server. If we find files from fileFromServer
      * buffer in changedFiles set we ignore those changes anc clear them from mentioned buffer.
+     *
      * @param changeSet is the set of changed files in watched client directory
      * @return filterred @param as ChangedFile list
      */
     public List<ChangedFile> clearChangeSetFromFilesFromServer(Set<ChangedFiles> changeSet) {
         List<String> filesToDeleteFromBuffer = new ArrayList<>();
 
-        if(!filesFromServer.isEmpty()) {
+        if (!filesFromServer.isEmpty()) {
 
             List<String> changedFilesWithoutPrefixesList = changeSet.stream()
                     .map(ChangedFiles::getFiles)
@@ -83,7 +84,7 @@ public class MyFileChangeListener implements FileChangeListener {
                 }
             }
 
-             filesFromServer = filesFromServer.stream()
+            filesFromServer = filesFromServer.stream()
                     .filter(fileFromServer -> !filesToDeleteFromBuffer.contains(userLocalDirectory + fileFromServer.getFilePath()))
                     .collect(Collectors.toList());
         }
@@ -112,7 +113,7 @@ public class MyFileChangeListener implements FileChangeListener {
         this.filesFromServer = filesFromServer;
     }
 
-    public List<UpdateFile> getFilesFromServer(){
+    public List<UpdateFile> getFilesFromServer() {
         return this.filesFromServer;
     }
 

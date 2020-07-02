@@ -52,6 +52,7 @@ public class FileUpdaterRequestSender {
     /**
      * This method sends request to the server on the /removeFiles endpoint.
      * If we receive 200 from server we assume that files were removed successfully.
+     *
      * @param updateFileList is the list of files to delete on the server directory
      */
     //todo add validation for RS
@@ -68,6 +69,7 @@ public class FileUpdaterRequestSender {
     /**
      * This method send GET request to the server to get server's file list.
      * If we receive 200 from server we assume that response is successful.
+     *
      * @return list of all files to as Response Entity
      */
     //todo check if UPDATEFILESRS ma byc
@@ -83,6 +85,7 @@ public class FileUpdaterRequestSender {
     /**
      * This method sends request to the server to update modification dates on server.
      * If we receive 200 from server we assume that response is successful.
+     *
      * @param updateFileList is the list of all files to update on server.
      */
     public void updateDateModification(List<UpdateFile> updateFileList) {
@@ -97,6 +100,7 @@ public class FileUpdaterRequestSender {
     /**
      * This method returns server's logfile list.
      * If servers returns 200 we assume response is successful.
+     *
      * @return FileLogger that contains all changes that happened on the server for set interval
      */
     public ResponseEntity<FileLogger> getServerLogFile() {
@@ -109,6 +113,7 @@ public class FileUpdaterRequestSender {
     /**
      * This method creates UpdateFileRQ as HttpEntity based on provided @param and
      * application-properties values
+     *
      * @param updateFileList is the list of all files to set as body in RQ
      * @return HttpEntity to send to server endpoints
      */
