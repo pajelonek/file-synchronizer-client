@@ -35,7 +35,7 @@ public class FileUpdateRequestSenderTest {
         List<UpdateFile> updateFileList = createUpdateFileList();
 
         //given
-        HttpEntity<UpdateFilesRQ> updateFileRQEntity = fileUpdateRequestSender.createUpdateFilesRequest(updateFileList);
+        HttpEntity<UpdateFilesRQ> updateFileRQEntity = fileUpdateRequestSender.createUpdateFilesRQ(updateFileList);
 
         //then
         assertThat(Objects.requireNonNull(updateFileRQEntity.getBody()).getMainFolder()).isNotNull();

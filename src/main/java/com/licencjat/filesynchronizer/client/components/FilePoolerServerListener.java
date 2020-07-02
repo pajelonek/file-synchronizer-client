@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @Service
-public class FilePoolerServerListener implements Runnable{
+public class FilePoolerServerListener implements Runnable {
 
     final FileUpdaterRequestSender fileUpdaterRequestSender;
 
@@ -27,6 +27,7 @@ public class FilePoolerServerListener implements Runnable{
     final MyFileChangeListener myFileChangeListener;
 
     final FileSystemWatcher fileSystemWatcher;
+    //TODO ADD CLEANER FOR FILESFROMSERVER!!!!!!!!!!!!!
 
     @Value("${client.name}")
     private String hostName;
@@ -44,14 +45,19 @@ public class FilePoolerServerListener implements Runnable{
         this.fileSystemWatcher = fileSystemWatcher;
     }
 
+    /**
+     * This method is being run every 3 seconds by default. If enabled(if enabled set to true by FilePoolerStartupRunner)
+     * this method gets log list list from server and based on that pull new changes from server directory, then set
+     * new lastSynchronized time.
+     */
     @Override
     @Scheduled(fixedDelay = 3000)
     public void run() {
-        if(enabled.get()) {
+        if (enabled.get()) {
             ResponseEntity<FileLogger> fileLoggerResponseEntity = fileUpdaterRequestSender.getServerLogFile();
-            List<UpdateFile> filesToProcessOnClient =  processForNewFiles(Objects.requireNonNull(fileLoggerResponseEntity.getBody()).getLogFileList());
+            List<UpdateFile> filesToProcessOnClient = processForNewFiles(Objects.requireNonNull(fileLoggerResponseEntity.getBody()).getLogFileList());
 
-            if(!filesToProcessOnClient.isEmpty()) {
+            if (!filesToProcessOnClient.isEmpty()) {
                 myFileChangeListener.addFilesFromServerToBuffer(filesToProcessOnClient);
                 List<UpdateFile> filesToUpdateOnClient = getFilesToUpdateOnClient(filesToProcessOnClient);
                 logger.info("Found {} added/modified files to update on client", filesToProcessOnClient.size());
@@ -78,6 +84,13 @@ public class FilePoolerServerListener implements Runnable{
                 .collect(Collectors.toList());
     }
 
+    /**
+     * This method takes logFile list and based on that filters so that we at the end we have
+     * newest change for each file modified after last synchronization of this component.
+     *
+     * @param logFileList is the list of all logs from server
+     * @return updateFileList of files to update on client directory
+     */
     public List<UpdateFile> processForNewFiles(List<LogFile> logFileList) {
         Set<String> set = new TreeSet<>();
         List<UpdateFile> logFileListToParse = new ArrayList<>();
@@ -86,7 +99,7 @@ public class FilePoolerServerListener implements Runnable{
                 .filter(fileLog -> !fileLog.getHost().equals(hostName))
                 .filter(fileLog -> Long.parseLong(fileLog.getTimeOfChange()) > Long.parseLong(lastSynchronizedTime))
                 .forEach(logFile -> {
-                    if(!set.contains(logFile.getFilePath())){
+                    if (!set.contains(logFile.getFilePath())) {
                         logFileListToParse.add(mapToUpdateFileObject(logFile));
                         set.add(logFile.getFilePath());
                     }
@@ -102,23 +115,23 @@ public class FilePoolerServerListener implements Runnable{
         return updateFile;
     }
 
-    public void initiateSynchronizeTime(){
+    public void initiateSynchronizeTime() {
         this.lastSynchronizedTime = String.valueOf(Instant.now().getEpochSecond());
     }
 
-    public void setLastSynchronizedTime(String lastSynchronizedTime){
+    public void setLastSynchronizedTime(String lastSynchronizedTime) {
         this.lastSynchronizedTime = lastSynchronizedTime;
     }
 
-    public String getLastSynchronizedTime(){
+    public String getLastSynchronizedTime() {
         return lastSynchronizedTime;
     }
 
-    public void triggerPoolerService(){
+    public void triggerPoolerService() {
         enabled.set(true);
     }
 
-    public void stopPoolerService(){
+    public void stopPoolerService() {
         enabled.set(false);
     }
 }

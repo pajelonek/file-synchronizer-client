@@ -49,15 +49,27 @@ public class FileUpdaterRequestSender {
 
     private Logger logger = LoggerFactory.getLogger(FileUpdaterRequestSender.class);
 
-    public void removeFilesOnServer(List<UpdateFile> updateFile) {
-        if (updateFile.size() > 0) {
-            HttpEntity<UpdateFilesRQ> updateFilesRQHttpEntity = createUpdateFilesRequest(updateFile);
+    /**
+     * This method sends request to the server on the /removeFiles endpoint.
+     * If we receive 200 from server we assume that files were removed successfully.
+     * @param updateFileList is the list of files to delete on the server directory
+     */
+    //todo add validation for RS
+    public void removeFilesOnServer(List<UpdateFile> updateFileList) {
+        if (updateFileList.size() > 0) {
+            HttpEntity<UpdateFilesRQ> updateFilesRQHttpEntity = createUpdateFilesRQ(updateFileList);
             ResponseEntity<UpdateFilesRS> updateFilesResponseEntity = restTemplate.postForEntity(serverAddress + removeFilesEndpoint, updateFilesRQHttpEntity, UpdateFilesRS.class);
             if (updateFilesResponseEntity.getStatusCode().value() == 200) {
                 logger.info("Successfully removed files on server");
             } else throw new Error("Could not remove files on server");
         }
     }
+
+    /**
+     * This method send GET request to the server to get server's file list.
+     * If we receive 200 from server we assume that response is successful.
+     * @return list of all files to as Response Entity
+     */
     //todo check if UPDATEFILESRS ma byc
     public ResponseEntity<UpdateFilesRQ> getServerFileList() {
         ResponseEntity<UpdateFilesRQ> getFileListRSResponseEntity = restTemplate.getForEntity(serverAddress + fileListEndpoint, UpdateFilesRQ.class);
@@ -68,21 +80,44 @@ public class FileUpdaterRequestSender {
         return getFileListRSResponseEntity;
     }
 
-    public void updateDateModification(List<UpdateFile> updateFile) {
-        logger.info("Updating modification date on server for {}", updateFile.toString());
-        HttpEntity<UpdateFilesRQ> updateFilesRQHttpEntity = createUpdateFilesRequest(updateFile);
+    /**
+     * This method sends request to the server to update modification dates on server.
+     * If we receive 200 from server we assume that response is successful.
+     * @param updateFileList is the list of all files to update on server.
+     */
+    public void updateDateModification(List<UpdateFile> updateFileList) {
+        logger.info("Updating modification date on server for {}", updateFileList.toString());
+        HttpEntity<UpdateFilesRQ> updateFilesRQHttpEntity = createUpdateFilesRQ(updateFileList);
         ResponseEntity<UpdateFilesRS> updateFilesResponseEntity = restTemplate.postForEntity(serverAddress + setModificationDateEndpoint, updateFilesRQHttpEntity, UpdateFilesRS.class);
         if (updateFilesResponseEntity.getStatusCode().value() == 200) {
             logger.info("Successfully updated modification date on server");
         } else throw new Error("Could not update modification date on server");
     }
 
-    public HttpEntity<UpdateFilesRQ> createUpdateFilesRequest(List<UpdateFile> updateFile) {
+    /**
+     * This method returns server's logfile list.
+     * If servers returns 200 we assume response is successful.
+     * @return FileLogger that contains all changes that happened on the server for set interval
+     */
+    public ResponseEntity<FileLogger> getServerLogFile() {
+        ResponseEntity<FileLogger> getLogFileResponseEntity = restTemplate.getForEntity(serverAddress + logFileEndpoint, FileLogger.class);
+        if (getLogFileResponseEntity.getStatusCodeValue() != 200)
+            throw new Error("Could not obtain logFile from server, check your connectivity to the server");
+        return getLogFileResponseEntity;
+    }
+
+    /**
+     * This method creates UpdateFileRQ as HttpEntity based on provided @param and
+     * application-properties values
+     * @param updateFileList is the list of all files to set as body in RQ
+     * @return HttpEntity to send to server endpoints
+     */
+    public HttpEntity<UpdateFilesRQ> createUpdateFilesRQ(List<UpdateFile> updateFileList) {
         UpdateFilesRQ updateFilesRQ = new UpdateFilesRQ();
         updateFilesRQ.setName("UpdateFilesRQ");
         updateFilesRQ.setHost(host);
         updateFilesRQ.setMainFolder(mainFolder);
-        updateFilesRQ.setUpdateFile(updateFile);
+        updateFilesRQ.setUpdateFile(updateFileList);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
@@ -91,10 +126,4 @@ public class FileUpdaterRequestSender {
         return new HttpEntity<>(updateFilesRQ, httpHeaders);
     }
 
-    public ResponseEntity<FileLogger> getServerLogFile() {
-        ResponseEntity<FileLogger> getLogFileResponseEntity = restTemplate.getForEntity(serverAddress + logFileEndpoint, FileLogger.class);
-        if (getLogFileResponseEntity.getStatusCodeValue() != 200)
-            throw new Error("Could not obtain logFile from server, check your connectivity to the server");
-        return getLogFileResponseEntity;
-    }
 }

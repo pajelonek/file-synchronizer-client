@@ -29,7 +29,7 @@ public class RSyncFileUpdaterProvider {
     private String userLocalDirectory;
 
     @Value("${ssh.hostname}")
-    private String hostName;
+    private String sshServerHostName;
 
     private String remoteMainFolder;
 
@@ -40,27 +40,41 @@ public class RSyncFileUpdaterProvider {
         this.fileUpdaterRequestSender = fileUpdaterRequestSender;
     }
 
+    /**
+     * This method its the logic which leads the process of compering files.
+     * It sorts files to the ones to be downloaded from server, deleted on client and ones which
+     * not required any action.
+     * At the start of the application we !DO NOT SEND ANY CHANGES TO SERVER!, we only update our directory
+     * to match the one on our server.
+     *
+     * @param serverFileList is the list of all the files from server
+     * @param clientFileList is the list of all the files from client
+     */
     public void processComparing(List<UpdateFile> serverFileList, List<UpdateFile> clientFileList) {
         logger.info("Starting comparing files with server");
 
         List<UpdateFile> filesToUpdateOnClientList = getExistingFilesToUpdate(serverFileList, clientFileList);
         logger.info("Found {} files to update on client", filesToUpdateOnClientList.size());
 
-        List<UpdateFile> filesToUploadOnClientList = getNewFilesToUploadOnClient(serverFileList, clientFileList);
-        logger.info("Found {} new files to upload on client", filesToUploadOnClientList.size());
+        List<UpdateFile> filesNotFoundOnClient = getNewFilesToUploadOnClient(serverFileList, clientFileList);
+        logger.info("Found {} new files to download on client", filesNotFoundOnClient.size());
 
-        List<UpdateFile> filesToUploadFromServerList = Stream.of(filesToUpdateOnClientList, filesToUploadOnClientList).flatMap(List::stream).collect(Collectors.toList());
+        List<UpdateFile> combinedListOfFilesToDownload = Stream.of(filesToUpdateOnClientList, filesNotFoundOnClient)
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
 
-        processOnClient(filesToUploadFromServerList);
+        processOnClient(combinedListOfFilesToDownload);
 
         List<UpdateFile> filesToDeleteOnClientList = getFilesToDeleteOnClient(serverFileList, clientFileList);
         logger.info("Found {} new files to delete on client", filesToDeleteOnClientList.size());
 
         deleteOnClient(filesToDeleteOnClientList);
-
-        updateModificationDateOnDirectories(userLocalDirectory);
     }
 
+    /**
+     * This method its the logic which leads on making changes on the server.
+     * @param clientFileList is the list of changed files from client directory
+     */
     public void processForServer(List<UpdateFile> clientFileList) {
         List<UpdateFile> filesToSendToServerList = clientFileList.stream()
                 .filter(file -> file.getAction().equals("MODIFY") || file.getAction().equals("ADD"))
@@ -76,26 +90,12 @@ public class RSyncFileUpdaterProvider {
         fileUpdaterRequestSender.removeFilesOnServer(filesToRemoveOnServerList);
     }
 
-    //TODO put into diff branch after everything
-    private void updateModificationDateOnDirectories(String userLocalDirectory) {
-//        try {
-//            List<String> directoryPathsList = Files.walk(Paths.get(userLocalDirectory+"\\"))
-//                    .filter(Files::isDirectory)
-//                    .map(path ->  path.getParent().toString() + "\\" +path.getFileName().toString())
-//                    .sorted().
-//                    .collect(Collectors.toList());
-//
-//            for (String path : directoryPathsList){
-//                File directory = new File(path);
-//                String[] filePathList = directory.list();
-//                System.out.println("kekw");
-//            }
-//            System.out.println("test");
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-    }
-
+    /**
+     * This method deletes files on client directory based on param.
+     * It checks is file is present, this is basic validation for this case, if is we deletes it with
+     * method from File class.
+     * @param filesToDeleteOnClientList is list of all files to delete on client.
+     */
     public void deleteOnClient(List<UpdateFile> filesToDeleteOnClientList) {
         for (UpdateFile updateFile : filesToDeleteOnClientList) {
             logger.info("Removing file: " + updateFile.getFilePath());
@@ -106,6 +106,13 @@ public class RSyncFileUpdaterProvider {
         }
     }
 
+    /**
+     * This method filters list of the files from server and based on the validation method return files
+     * which should be deleted on the client directory.
+     * @param serverFileList is the list of all files from server directory
+     * @param clientFileList is the list of all files from client directory
+     * @return list of files to delete on client directory
+     */
     public List<UpdateFile> getFilesToDeleteOnClient(List<UpdateFile> serverFileList, List<UpdateFile> clientFileList) {
         List<String> serverFileNames = serverFileList.stream()
                 .map(UpdateFile::getFilePath)
@@ -116,65 +123,118 @@ public class RSyncFileUpdaterProvider {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * This method list files from server which weren't found in the client directory.
+     *
+     * @param serverFileList is the list of all the files from server
+     * @param clientFileList is the list of all the files from client
+     * @return list of the files not found in the client directory.
+     */
     public List<UpdateFile> getNewFilesToUploadOnClient(List<UpdateFile> serverFileList, List<UpdateFile> clientFileList) {
-        List<String> filesFromClientList = clientFileList.stream()
+        List<String> filePathsFromClientList = clientFileList.stream()
                 .map(UpdateFile::getFilePath)
                 .collect(Collectors.toList());
 
         return serverFileList.stream()
-                .filter(serverFile -> isFileOnClient(serverFile, filesFromClientList))
+                .filter(serverFile -> isFileOnClient(serverFile, filePathsFromClientList))
                 .collect(Collectors.toList());
     }
 
+    /**
+     * This method filters list of the files from server and based on the validation method return files
+     * which should be updated on the client directory.
+     *
+     * @param serverFileList is the list of all the files from server
+     * @param clientFileList is the list of all the files from client
+     * @return list of files to be updated on client
+     */
     public List<UpdateFile> getExistingFilesToUpdate(List<UpdateFile> serverFileList, List<UpdateFile> clientFileList) {
         return serverFileList.stream()
-                .filter(file -> validateIfUpdateFile(file, clientFileList))
+                .filter(serverFile -> checkIfUpdateIsNeeded(serverFile, clientFileList))
                 .collect(Collectors.toList());
     }
 
-    private boolean isFileOnClient(UpdateFile file, List<String> clientFileList) {
-        return !clientFileList.contains(file.getFilePath());
+    /**
+     * This method checks if file from server is existing in the list of files from client.
+     *
+     * @param serverFile     is the file from server
+     * @param clientFileList is the list of all files from client
+     * @return result of checking if serverFile is present in the clientFileList
+     */
+    private boolean isFileOnClient(UpdateFile serverFile, List<String> clientFileList) {
+        return !clientFileList.contains(serverFile.getFilePath());
     }
 
-    //todo opisz
-    public void processOnClient(List<UpdateFile> fileToUpdateOnClient) {
-        fileToUpdateOnClient.stream()
+    /**
+     * This method splits files to be updated on the client in the way that theirs prefixes matches.
+     * <p>
+     * Example: /directory1/fileOne.txt, /directory2/fileOne.txt, /directory1/fileTwo.txt
+     * Method will send files from directory1 in the first loop of foreach because their prefixes matches and it
+     * will save time to download them from server in the same time. File from directory2 will be downloaded in the
+     * second loop of the foreach.
+     *
+     * @param filesToUpdateOnClientList is list of the files to be updated in client directory
+     */
+    public void processOnClient(List<UpdateFile> filesToUpdateOnClientList) {
+        filesToUpdateOnClientList.stream()
                 .collect(Collectors.groupingBy(fileToUpdate -> fileToUpdate.getFilePath().substring(0, fileToUpdate.getFilePath().lastIndexOf('\\'))))
-                .forEach((prefixOfPath, fileRQ) -> modifyFileOnClient(fileRQ, prefixOfPath));
+                .forEach((prefixOfPath, updateFileList) -> modifyFilesOnClient(updateFileList, prefixOfPath));
     }
 
-    //todo change hostName to sshHostName/sshServerName
-    private void modifyFileOnClient(List<UpdateFile> updateFileList, String prefixOfPath) {
-        List<String> sourcesList = updateFileList.stream()
+    /**
+     * This method prepare provided files to be send to rSyncFileUpdateExecutor.
+     * It maps their file paths so that ssh will find them on the server and then
+     * update their modification dates.
+     *
+     * @param clientFileList is the list of all files to modify on client directory
+     * @param prefixOfPath   is the unique prefix of path that mathes all clientFileList elements
+     */
+    private void modifyFilesOnClient(List<UpdateFile> clientFileList, String prefixOfPath) {
+        List<String> sourcesList = clientFileList.stream()
                 .map(UpdateFile::getFilePath)
-                .map(filePath -> hostName + ":" + remoteMainFolder + filePath)
+                .map(filePath -> sshServerHostName + ":" + remoteMainFolder + filePath)
                 .collect(Collectors.toList());
 
-        logger.info("Modifying {} file/files on client", sourcesList.toString());
+        logger.info("Downloading {} file/files from client", sourcesList.toString());
         rSyncFileUpdaterExecutor
                 .setSources(sourcesList)
                 .setDestination(userLocalDirectory + prefixOfPath + "\\")
                 .execute();
 
-        updateFileModificationDateOnClient(updateFileList);
+        updateFileModificationDateOnClient(clientFileList);
     }
 
-    public void updateFileModificationDateOnClient(List<UpdateFile> updateFileList) {
-        for (UpdateFile updateFile : updateFileList) {
-            logger.info("Changing modification date for file: " + updateFile.getFilePath());
-            File file = new File(userLocalDirectory + updateFile.getFilePath());
-            if (file.exists() && file.setLastModified(Long.parseLong(updateFile.getLastModified()))) {
-                logger.info("Successfully modified date for file: " + updateFile.getFilePath());
+    /**
+     * This method change modification date on client directory for the provided files
+     * in the way that they will match with server directory.
+     * @param clientFileList is the list of files to update modification date.
+     */
+    public void updateFileModificationDateOnClient(List<UpdateFile> clientFileList) {
+        for (UpdateFile clientFile : clientFileList) {
+            logger.info("Changing modification date for file: " + clientFile.getFilePath());
+            File file = new File(userLocalDirectory + clientFile.getFilePath());
+            if (file.exists() && file.setLastModified(Long.parseLong(clientFile.getLastModified()))) {
+                logger.info("Successfully modified date for file: " + clientFile.getFilePath());
             } else throw new Error("Could not find file on client");
         }
     }
 
+    /**
+     * This method filters and splits files from @param in the way that in each loop serverFileList elements have
+     * the same destination folder and will be updated on server at the same time.
+     * @param filesToSendToServerList is the files from client to send to server
+     */
     public void processOnServer(List<UpdateFile> filesToSendToServerList) {
         filesToSendToServerList.stream()
                 .collect(Collectors.groupingBy(fileToUpdate -> fileToUpdate.getFilePath().substring(0, fileToUpdate.getFilePath().lastIndexOf('\\'))))
-                .forEach((prefixOfPath, file) -> modifyFileOnServer(file, prefixOfPath));
+                .forEach((prefixOfPath, updateFileList) -> modifyFileOnServer(updateFileList, prefixOfPath));
     }
 
+    /**
+     * This method maps @params as sources and destination to send files from updateFileList to the server directory.
+     * @param updateFileList is the list of sources from same destination directory to send to server
+     * @param prefixOfPath is the prefix of path to the folder that matchees all updateFileList element
+     */
     private void modifyFileOnServer(List<UpdateFile> updateFileList, String prefixOfPath) {
         List<String> sources = updateFileList.stream()
                 .map(UpdateFile::getFilePath)
@@ -184,7 +244,7 @@ public class RSyncFileUpdaterProvider {
         logger.info("Modifying {} file/files on server", sources.toString());
         rSyncFileUpdaterExecutor
                 .setSources(sources)
-                .setDestination(hostName + ":" + remoteMainFolder + prefixOfPath + "\\")
+                .setDestination(sshServerHostName + ":" + remoteMainFolder + prefixOfPath + "\\")
                 .execute();
 
         updateFileModificationDateOnServer(updateFileList);
@@ -208,11 +268,20 @@ public class RSyncFileUpdaterProvider {
     }
 
     //todo think about != instead of <
-    private boolean validateIfUpdateFile(UpdateFile serverFile, List<UpdateFile> clientFileList) {
-        Optional<UpdateFile> fileOnServer = clientFileList.stream()
+
+    /**
+     * This method validates if file from the server is present in the client directory, if it finds same file
+     * it compare their modification dates and returns true if file from server is newer
+     *
+     * @param serverFile     is the file from server
+     * @param clientFileList is the list of all the files from client
+     * @return result of validation if file from server should be updated on client
+     */
+    private boolean checkIfUpdateIsNeeded(UpdateFile serverFile, List<UpdateFile> clientFileList) {
+        Optional<UpdateFile> isFileOnClient = clientFileList.stream()
                 .filter(clientFile -> clientFile.getFilePath().equals(serverFile.getFilePath()))
                 .findAny();
-        return fileOnServer.filter(fileRQList -> Long.parseLong(fileRQList.getLastModified()) < Long.parseLong(serverFile.getLastModified())).isPresent();
+        return isFileOnClient.filter(fileRQList -> Long.parseLong(fileRQList.getLastModified()) < Long.parseLong(serverFile.getLastModified())).isPresent();
     }
 
     public RSyncFileUpdaterProvider setRemoteMainFolder(String remoteMainFolder) {

@@ -60,10 +60,16 @@ public class FilePoolerStartupRunner implements ApplicationListener<ApplicationR
     /**
      * This event is executed as late as conceivably possible to indicate that
      * the application is ready to service requests.
+     *
+     * After successful start of the application we collect list of all the files from
+     * our directory with the ones on our server-side application and then we pass it to the rSyncFileUpdateProvider
+     * for further actions.
+     *
+     * After comparing files, method starts FileSystemWatcher component and FilePoolerServerListener service.
      */
     @Override
     public void onApplicationEvent(final ApplicationReadyEvent event) {
-        if(environment.equalsIgnoreCase("PROD")) {
+        if (environment.equalsIgnoreCase("PROD")) {
             logger.info("Application event start up");
 
             List<UpdateFile> clientFileList = getClientFileList();
@@ -82,37 +88,51 @@ public class FilePoolerStartupRunner implements ApplicationListener<ApplicationR
         }
     }
 
-
+    /**
+     *  This method simply creates a list of UpdateFile objects, then runs recursive method which list
+     *  all of the files in client directory which we returns.
+     *
+     * @return the list of UpdateFile objects which represents files in the client directory
+     */
     public List<UpdateFile> getClientFileList() {
         List<UpdateFile> clientFileList = new ArrayList<>();
         listFilesFromDirectory(Paths.get(userLocalDirectory), clientFileList);
         return clientFileList;
     }
 
+    /**
+     * This method cuts prefix of file paths because prefix is not guaranteed to be equal on server and client
+     * @param path to the file
+     * @return path without its prefix
+     */
     private String cutPrefixFromFilePath(String path) {
         return path.replace(mainFolder, "");
     }
 
+    /**
+     * Recursive method which recursively list all the files in the directory and its subdirectories.
+     * During going over files it creates an UpdateFile object from the file and add this to the list of UpdateFile
+     * objects provided as parameters.
+     * If it encounters directory, it recursively goes to encountered directory.
+     * @param path to the current directory which is being listed of all files
+     * @param updateFileList which contains informations of all encountered files
+     */
     public void listFilesFromDirectory(Path path, List<UpdateFile> updateFileList) {
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
-            for (Path pathInSubfolder : stream)
-                if (!Files.isDirectory(pathInSubfolder)) {
+            for (Path currentPath : stream)
+                if (!Files.isDirectory(currentPath)) {
                     UpdateFile updateFile = new UpdateFile();
-                    File file = pathInSubfolder.toFile();
+                    File file = currentPath.toFile();
                     updateFile.setFilePath(cutPrefixFromFilePath(file.getPath()));
                     updateFile.setLastModified(String.valueOf(file.lastModified()));
                     updateFileList.add(updateFile);
-                } else listFilesFromDirectory(pathInSubfolder, updateFileList);
+                } else listFilesFromDirectory(currentPath, updateFileList);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void setEnvironment(String environment) {
-        this.environment = environment;
-    }
-
-    public String getEnvironment(){
+    public String getEnvironment() {
         return environment;
     }
 }
