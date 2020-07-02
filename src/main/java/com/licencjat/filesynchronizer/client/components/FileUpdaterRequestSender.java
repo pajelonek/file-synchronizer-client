@@ -19,6 +19,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 @Component
 @ContextConfiguration(classes = {RestTemplateConfig.class, HttpClientConfig.class})
@@ -55,12 +56,11 @@ public class FileUpdaterRequestSender {
      *
      * @param updateFileList is the list of files to delete on the server directory
      */
-    //todo add validation for RS
     public void removeFilesOnServer(List<UpdateFile> updateFileList) {
         if (updateFileList.size() > 0) {
             HttpEntity<UpdateFilesRQ> updateFilesRQHttpEntity = createUpdateFilesRQ(updateFileList);
             ResponseEntity<UpdateFilesRS> updateFilesResponseEntity = restTemplate.postForEntity(serverAddress + removeFilesEndpoint, updateFilesRQHttpEntity, UpdateFilesRS.class);
-            if (updateFilesResponseEntity.getStatusCode().value() == 200) {
+            if (updateFilesResponseEntity.getStatusCode().value() == 200 && Objects.requireNonNull(updateFilesResponseEntity.getBody()).getStatus().equalsIgnoreCase("ok")) {
                 logger.info("Successfully removed files on server");
             } else throw new Error("Could not remove files on server");
         }
@@ -72,7 +72,6 @@ public class FileUpdaterRequestSender {
      *
      * @return list of all files to as Response Entity
      */
-    //todo check if UPDATEFILESRS ma byc
     public ResponseEntity<UpdateFilesRQ> getServerFileList() {
         ResponseEntity<UpdateFilesRQ> getFileListRSResponseEntity = restTemplate.getForEntity(serverAddress + fileListEndpoint, UpdateFilesRQ.class);
         if (getFileListRSResponseEntity.getStatusCodeValue() == 200) {
@@ -92,7 +91,7 @@ public class FileUpdaterRequestSender {
         logger.info("Updating modification date on server for {}", updateFileList.toString());
         HttpEntity<UpdateFilesRQ> updateFilesRQHttpEntity = createUpdateFilesRQ(updateFileList);
         ResponseEntity<UpdateFilesRS> updateFilesResponseEntity = restTemplate.postForEntity(serverAddress + setModificationDateEndpoint, updateFilesRQHttpEntity, UpdateFilesRS.class);
-        if (updateFilesResponseEntity.getStatusCode().value() == 200) {
+        if (updateFilesResponseEntity.getStatusCode().value() == 200 && Objects.requireNonNull(updateFilesResponseEntity.getBody()).getStatus().equalsIgnoreCase("ok")) {
             logger.info("Successfully updated modification date on server");
         } else throw new Error("Could not update modification date on server");
     }
