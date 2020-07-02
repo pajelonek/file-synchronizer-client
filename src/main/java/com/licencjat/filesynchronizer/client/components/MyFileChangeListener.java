@@ -32,6 +32,8 @@ public class MyFileChangeListener implements FileChangeListener {
 
     List<UpdateFile> filesFromServer = new ArrayList<>();
 
+    private long filesFromServerCleanUpInterval = 3000;
+
     public MyFileChangeListener(RSyncFileUpdaterProvider rSyncFileUpdaterProvider, FileUpdaterRequestSender fileUpdaterRequestSender) {
         this.rSyncFileUpdaterProvider = rSyncFileUpdaterProvider;
         this.fileUpdaterRequestSender = fileUpdaterRequestSender;
@@ -58,25 +60,18 @@ public class MyFileChangeListener implements FileChangeListener {
         rSyncFileUpdaterProvider.processForServer(clientFileList);
     }
 
-    //todo make better
-
     /**
      * This method filters changeFiles set with the buffer of changes from server. If we find files from fileFromServer
      * buffer in changedFiles set we ignore those changes anc clear them from mentioned buffer.
      *
      * @param changeSet is the set of changed files in watched client directory
-     * @return filterred @param as ChangedFile list
+     * @return filtered @param as ChangedFile list
      */
     public List<ChangedFile> clearChangeSetFromFilesFromServer(Set<ChangedFiles> changeSet) {
         List<String> filesToDeleteFromBuffer = new ArrayList<>();
 
         if (!filesFromServer.isEmpty()) {
-
-            List<String> changedFilesWithoutPrefixesList = changeSet.stream()
-                    .map(ChangedFiles::getFiles)
-                    .flatMap(Collection::stream)
-                    .map(file -> file.getFile().getPath().replace(userLocalDirectory, ""))
-                    .collect(Collectors.toList());
+            List<String> changedFilesWithoutPrefixesList = mapToStringListWithoutPrefixes(changeSet);
 
             for (UpdateFile file : filesFromServer) {
                 if (changedFilesWithoutPrefixesList.contains(file.getFilePath())) {
@@ -84,15 +79,27 @@ public class MyFileChangeListener implements FileChangeListener {
                 }
             }
 
-            filesFromServer = filesFromServer.stream()
-                    .filter(fileFromServer -> !filesToDeleteFromBuffer.contains(userLocalDirectory + fileFromServer.getFilePath()))
-                    .collect(Collectors.toList());
+            filesFromServer = cleanUpFilesFromServerList(filesFromServer, filesToDeleteFromBuffer);
         }
 
         return changeSet.stream()
                 .map(ChangedFiles::getFiles)
                 .flatMap(Collection::stream)
                 .filter(file -> !filesToDeleteFromBuffer.contains(file.getFile().getPath()))
+                .collect(Collectors.toList());
+    }
+
+    private List<UpdateFile> cleanUpFilesFromServerList(List<UpdateFile> filesFromServer, List<String> filesToDeleteFromBuffer) {
+        return filesFromServer.stream()
+                .filter(fileFromServer -> !filesToDeleteFromBuffer.contains(userLocalDirectory + fileFromServer.getFilePath()))
+                .collect(Collectors.toList());
+    }
+
+    private List<String> mapToStringListWithoutPrefixes(Set<ChangedFiles> changeSet) {
+        return changeSet.stream()
+                .map(ChangedFiles::getFiles)
+                .flatMap(Collection::stream)
+                .map(file -> file.getFile().getPath().replace(userLocalDirectory, ""))
                 .collect(Collectors.toList());
     }
 
@@ -117,4 +124,9 @@ public class MyFileChangeListener implements FileChangeListener {
         return this.filesFromServer;
     }
 
+    public void cleanUpFilesFromServer(Long currentTime) {
+        filesFromServer = filesFromServer.stream()
+                .filter(file -> Long.parseLong(file.getLastModified()) > currentTime - filesFromServerCleanUpInterval)
+                .collect(Collectors.toList());
+    }
 }
