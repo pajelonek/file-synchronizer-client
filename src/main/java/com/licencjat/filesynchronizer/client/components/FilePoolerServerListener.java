@@ -67,7 +67,14 @@ public class FilePoolerServerListener implements Runnable {
                 rSyncFileUpdaterProvider.deleteOnClient(filesToDeleteOnClient);
             }
             myFileChangeListener.cleanUpFilesFromServer(Long.parseLong(fileLoggerResponseEntity.getBody().getCurrentTime()));
-            setLastSynchronizedTime(String.valueOf(fileLoggerResponseEntity.getBody().getCurrentTime()));
+            setNewLastSychronizedTime(fileLoggerResponseEntity);
+        }
+    }
+
+    private void setNewLastSychronizedTime(ResponseEntity<FileLogger> fileLoggerResponseEntity) {
+        String lastSynchronizedTimeFromLogs = Objects.requireNonNull(fileLoggerResponseEntity.getBody()).getLastSynchronizedTime();
+        if (Long.parseLong(this.lastSynchronizedTime) < Long.parseLong(lastSynchronizedTimeFromLogs)){
+            setLastSynchronizedTime(lastSynchronizedTimeFromLogs);
         }
     }
 

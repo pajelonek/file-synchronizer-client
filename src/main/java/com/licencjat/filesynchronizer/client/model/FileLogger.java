@@ -7,7 +7,8 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
         "currentTime",
-        "logFileList"
+        "logFileList",
+        "lastSynchronizedTime"
 })
 public class FileLogger {
 
@@ -16,6 +17,9 @@ public class FileLogger {
 
     @JsonProperty("logFileList")
     private List<LogFile> logFileList;
+
+    @JsonProperty("lastSynchronizedTime")
+    private String lastSynchronizedTime;
 
     @JsonProperty("currentTime")
     public String getCurrentTime() {
@@ -37,4 +41,11 @@ public class FileLogger {
         this.logFileList = logFileList;
     }
 
+    public String getLastSynchronizedTime() {
+        return lastSynchronizedTime;
+    }
+
+    public void setLastSynchronizedTime(String lastSynchronizedTime) {
+        this.lastSynchronizedTime = lastSynchronizedTime;
+    }
 }
