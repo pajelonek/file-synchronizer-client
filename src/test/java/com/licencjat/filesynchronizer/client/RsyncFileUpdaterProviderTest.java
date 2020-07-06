@@ -114,21 +114,6 @@ public class RsyncFileUpdaterProviderTest {
         validateIfNewerFilesAreUploaded(serverFileList, clientFileList, existingFilesToUpdate);
     }
 
-    @Test
-    void updateFileModificationDateOnClientTest() {
-        //when
-        createResourcesFilesSetOne();
-        List<UpdateFile> updateFileList = createUpdateFileList(setOne);
-        Map<String, String> newModificationDatesMap = createNewModificationDateMap(updateFileList);
-
-        //given
-        rsyncFileUpdaterProvider.updateFileModificationDateOnClient(updateFileList);
-
-        //then
-        validateCorrectNewModificationDates(updateFileList, newModificationDatesMap);
-
-    }
-
     private void createResourcesFilesSetOne() {
         createSetOne();
         createSetOneDirectoryList();
@@ -225,27 +210,6 @@ public class RsyncFileUpdaterProviderTest {
             assertThat(Long.parseLong(modifiedDateFromServer.get())).isGreaterThan(Long.parseLong(modifiedDateFromClient.get()));
         }
     }
-
-    private void validateCorrectNewModificationDates(List<UpdateFile> updateFileList, Map<String, String> newModificationDatesMap) {
-        for(UpdateFile updateFile : updateFileList){
-            assertThat(newModificationDatesMap.get(updateFile.getFilePath())).isEqualTo(updateFile.getLastModified());
-        }
-    }
-
-    private Map<String, String> createNewModificationDateMap(List<UpdateFile> updateFileList) {
-        Map<String, String> newModificationDateMap = new HashMap<>();
-        int randomPositiveNumber;
-        int leftLimit = 1;
-        int rightLimit = 10;
-        for (UpdateFile updateFile : updateFileList) {
-            randomPositiveNumber = new Random().nextInt(rightLimit - leftLimit + 1) + leftLimit;
-            String newModificationDate = String.valueOf(Long.parseLong(updateFile.getLastModified()) + (long)randomPositiveNumber);
-            updateFile.setLastModified(newModificationDate);
-            newModificationDateMap.put(updateFile.getFilePath(), newModificationDate);
-        }
-        return newModificationDateMap;
-    }
-
 
     private void createResourcesFilesSetTwo() {
         createSetTwo();

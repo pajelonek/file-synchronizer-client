@@ -41,7 +41,7 @@ public class FileUpdaterRequestSender {
     private String fileListEndpoint;
 
     @Value("${file.synchronizer.setModificationDate.endpoint}")
-    private String setModificationDateEndpoint;
+    private String registerFilesEndpoint;
 
     @Value("${file.synchronizer.logfile.endpoint}")
     private String logFileEndpoint;
@@ -50,6 +50,7 @@ public class FileUpdaterRequestSender {
 
     private Logger logger = LoggerFactory.getLogger(FileUpdaterRequestSender.class);
 
+    //ToDo I added UpdateFileStatus -> check validation
     /**
      * This method sends request to the server on the /removeFiles endpoint.
      * If we receive 200 from server we assume that files were removed successfully.
@@ -87,12 +88,12 @@ public class FileUpdaterRequestSender {
      *
      * @param updateFileList is the list of all files to update on server.
      */
-    public void updateDateModification(List<UpdateFile> updateFileList) {
-        logger.info("Updating modification date on server for {}", updateFileList.toString());
+    public void registerFile(List<UpdateFile> updateFileList) {
+        logger.info("Registering change of file on server for {}", updateFileList.toString());
         HttpEntity<UpdateFilesRQ> updateFilesRQHttpEntity = createUpdateFilesRQ(updateFileList);
-        ResponseEntity<UpdateFilesRS> updateFilesResponseEntity = restTemplate.postForEntity(serverAddress + setModificationDateEndpoint, updateFilesRQHttpEntity, UpdateFilesRS.class);
+        ResponseEntity<UpdateFilesRS> updateFilesResponseEntity = restTemplate.postForEntity(serverAddress + registerFilesEndpoint, updateFilesRQHttpEntity, UpdateFilesRS.class);
         if (updateFilesResponseEntity.getStatusCode().value() == 200 && Objects.requireNonNull(updateFilesResponseEntity.getBody()).getStatus().equalsIgnoreCase("ok")) {
-            logger.info("Successfully updated modification date on server");
+            logger.info("Successfully registered file on server");
         } else throw new Error("Could not update modification date on server");
     }
 

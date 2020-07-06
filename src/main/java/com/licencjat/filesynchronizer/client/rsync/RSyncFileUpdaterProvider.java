@@ -204,23 +204,6 @@ public class RSyncFileUpdaterProvider {
                 .setDestination(userLocalDirectory + prefixOfPath + "\\")
                 .execute();
 
-        updateFileModificationDateOnClient(clientFileList);
-    }
-
-    /**
-     * This method change modification date on client directory for the provided files
-     * in the way that they will match with server directory.
-     *
-     * @param clientFileList is the list of files to update modification date.
-     */
-    public void updateFileModificationDateOnClient(List<UpdateFile> clientFileList) {
-        for (UpdateFile clientFile : clientFileList) {
-            logger.info("Changing modification date for file: " + clientFile.getFilePath());
-            File file = new File(userLocalDirectory + clientFile.getFilePath());
-            if (file.exists() && file.setLastModified(Long.parseLong(clientFile.getLastModified()))) {
-                logger.info("Successfully modified date for file: " + clientFile.getFilePath());
-            } else throw new Error("Could not find file on client");
-        }
     }
 
     /**
@@ -253,7 +236,7 @@ public class RSyncFileUpdaterProvider {
                 .setDestination(sshServerHostName + ":" + remoteMainFolder + prefixOfPath + "\\")
                 .execute();
 
-        updateFileModificationDateOnServer(updateFileList);
+        registerFilesOnServer(updateFileList);
     }
 
     public List<UpdateFile> mapToUpdateFileList(Map<String, ChangedFile.Type> updatedFiles) {
@@ -269,8 +252,8 @@ public class RSyncFileUpdaterProvider {
         return listToUpdate;
     }
 
-    private void updateFileModificationDateOnServer(List<UpdateFile> updateFile) {
-        fileUpdaterRequestSender.updateDateModification(updateFile);
+    private void registerFilesOnServer(List<UpdateFile> updateFile) {
+        fileUpdaterRequestSender.registerFile(updateFile);
     }
 
     /**
@@ -292,5 +275,6 @@ public class RSyncFileUpdaterProvider {
         this.remoteMainFolder = remoteMainFolder;
         return this;
     }
+    //ToDo add one more validation if file exists in rsyncfileupdateExecutor to cover for errors
 
 }
