@@ -2,11 +2,11 @@
 
 It's a client side of the project regarding file synchronizing through ssh with rsync on Windows 10.
 
-The client is responsible for detecting changes in watching directory, sending files through ssh protocol with the use of rsync
+The client is responsible for detecting changes in watching directory, sending files through ssh protocol with the use of rsync binaries.
  
 
-Except installing necessary feature it is required to configure application.properties file as well as ssh configuration
-which is described below.
+Except installing necessary feature it is required to configure application.properties file as well as rsync with ssh configurations
+which is more described below.
 
 ## Prerequisites
 Make sure you have installed all of the following prerequisites on your development machine:
@@ -26,9 +26,15 @@ git clone [copied link from github]
 ```
 
 ### Configuration of application-properties
+After you downloaded project, you can configure properties for your client.
+Application-properties file can be found where you cloned repository under:
 ```
-client.name = PC1 /* This name notifies server which client applied changes to server directory
-can be changed to any name of your choose. Remember to name clients differently!  */
+src/main/resources/application.properties
+```
+Now configure properties values as suggested below:
+```
+client.name = PC1 /* This name notifies server which client applies changes to server directory.
+This can be changed to any name of your choose. Remember to name clients differently!  */
 environment = PROD  /* Property for testing purposes, do not change */
 logging.level.root = INFO /* For futher development you may want to change to DEBUG */
 
@@ -49,9 +55,18 @@ rsync.remote.shell=ssh
 /* Name of the server from ssh config, configuration will be in part "SSH configuration" */
 ssh.hostname=server
 ```
+## Rsync configuration
+In this project it is essential to use rsync binaries as well as ssh binaries for fluent connectivity.
+Default location for those binaries is:
+```
+C:\Users\User\rsync4j
+```
+It is possible to use another location than C:\Users\User\rsync4j. You only have to set up the RSYNC4J_HOME 
+environment variable to point to the top-level directory (doesn't have to exist) where you want to house the binaries and then restart
+your working station.
 ### Installing
 
-A step by step series of examples that tell you how to get a development env running
+A step by step series of examples that tell you how to get a development environment running
 
 Firstly we need to install project along with all required dependencies:
 
@@ -59,59 +74,82 @@ Go to the folder where you cloned repository and run:
 ```
 mvn clean install
 ```
-Maven will download rsync binaries from Cygwin distribution which are required in this project.
+Maven will download rsync and ssh binaries from Cygwin distribution which are required in this project.
 If build is completed successfully, continue to the rsync configuration.
 
-## Rsync configuration
-We need rsync binaries to add rsync as systen environment variable.
-Default location is:
+### SSH Client configuration
+##### Generating ssh key pairs
+Navigate to the directory where you choose to store binaries and then run:
 ```
-C:\Users\User\rsync4j
+ssh-keygen
 ```
-It is possible to use another location than C:\Users\User\rsync4j. You only have to set up the RSYNC4J_HOME 
-environment variable to point to the top-level directory (doesn't have to exist) where you want to house the binaries 
-and keys.
-##### !Remember! Changing the location will automatically mean to set rsync as environment variable. Leaving files in default location do not have this condition
-Now, if you decided to change location, you can copy files from default location and place them in your new path or delete
-files from previous directory and again run:
-```
-mvn clean install
-```
-to trigger download to the new path.
+Firstly you will be asked to choose name for the file storing your key, you can leave it empty as by default.
 
-Run in command line to check if your files and environment variable is working successfully:
-```
-where rsync
-rsync --version
-```
-If everything works right now, you can go on to ssh configuration.
-## SSH Client configuration
-/*
-Z GRZESKIEM
-DODAJEMY PO ZMIANIE LOKALIZACJI FOLDERU BINARKI DO PATH(RESTARTUJEMY) I SPRAWDZAMY CZY SSH I RSYNC DZIALAJA
-teraz ssh-keygen
-NO PASSPHRASE
-OTWIERAMY W NOTEPADD IDRSA.PUB I KOPIUJEMY ZAWARTOSC
-ROBIMY CONFIG NOTEPADEM NARAZIE NIE PRZYSYŁAMY KLUCZY SSH 
-ZMIENIAMY DO NIEGO UPRAWNIENIA 
-WYSYŁAMY KLUCZ Z CLIENTA DO SERVEERA
-WYSYLAMY GO Z GIT CONSOLE KOMENDA CAT DZIEKI TEMU DODAMY HOST DO KNOWN_HOSTS
-DZIALA TYLKO JAK WYSYLAMY ZA POMOCA SCP 
-scp .ssh/id_rsa.pub Grzesiek@192.168.1.16:.ssh/authorized_keys tak zadziałało
+Then you will be asked to provide password, just click enter to give it empty password. Any other password configuration will 
+application to fail. Then you will be asked to enter password again and again leave it empty.
 
-POTEM KOMENDY SA OK
-SPRAWDZ DEPENDENCJE BO NA KLIENCIE SIE TOMCAT ODPALA
-
-*/
-Make sure you have enabled and downloaded ssh files. They should be in this directory:
+You should now see your public and private key name with your random image. If you have already installed OpenSSH Client(it is by deufalt enabled in Windows 10)
+operating system may generate your key in 
 ```
-C:\Windows\System32\OpenSSH
+.C:/Users/Username/.ssh
 ```
+that's why you should check carefully where your keys are.
 
-If they are not, go back to Prerequisites and follow instructions on how to enable this feature.
+##### Generate SSH config file
+SSH config file contains information necessary for ssh clients to connect to the ssh server via alias.
 
-###Important notes:
- Because OpenSSH is linux based protocol. We need to set manually access to file
+To create ssh config file, open text editor and create file WITHOUT EXTENSION with name = "config".
+Here there is example of the content of config file:
+```
+Host server:
+     HostName 10.10.10.10
+     User username
+```
+In application-properties you could found property:
+```
+ssh.hostname
+```
+this property need to be equal to the one provided in ssh config file as hostname of the ssh server with server application.
+Remember that config file has specific pattern:
+```
+Host hostname:
+<-5 spaces->Property Value
+```
+You can read about ssh config here: [How to use SSH Config file](https://www.ssh.com/ssh/config/).
+
+##### Changing permission of config file and ssh keys pair
+SSH protocol was designed to work on UNIX-based systems, because of that we need to manually change permissions of config files, as well as ssh keys.
+
+For all 3 files(public key, private key and config file):
+- Open properties
+- Go to security
+- Open Advanced
+- Disable inheritance
+- Delete all users permissions EXCEPT SYSTEM AND YOURS USER
+- Click confirm
+### Sending ssh key to your ssh server
+##### To securely copy ssh key you should have ssh server on your machine for server application.
+##### It is recommended to not find other solution, just come back to this step after finishing "SSH SERVER configuration" in server application README
+
+To copy ssh keys we simply need to copy them to server ssh destination:
+```
+scp .ssh/id_rsa.pub SshHostnameFromConfig:.ssh/authorized_keys
+```
+It should properly copy your ssh_key to server file.
+If not, check if you have /.ssh/authorized_keys path in your server directory
+
+##### Copying ssh config
+Correct destination for ssh config is where you copied your binaries:
+```
+rsync_binaries_path/home/User/.ssh/config
+```
+##### Checking ssh
+After you placed your config and set-up ssh server on your machine with server application run:
+```
+ssh sshHostNameFromConfig
+```
+and check if you can successfully connect to your server
+
 ## Running the tests
 
 To run test run:
@@ -120,52 +158,18 @@ To run test run:
 mvn test
 ```
 
-### Break down into end to end tests
-
-Explain what these tests test and why
-
-```
-Give an example
-```
-
-### And coding style tests
-
-Explain what these tests test and why
-
-```
-Give an example
-```
-
 ## Deployment
 
-Add additional notes about how to deploy this on a live system
-
-## Built With
-
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
-
-## Contributing
-
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
-
-## Versioning
-
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
-
+To create executable jar go to your repository directory and run:
+```
+mvn clean package spring-boot:repackage
+```
+and then to execute jar:
+```
+java -jar project.jar
+```
 ## Authors
 
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
+* **Paweł Jelonek** - *Initial work* 
 
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
-
-## Acknowledgments
-
-* Hat tip to anyone whose code was used
-* Inspiration
-* etc
+#
