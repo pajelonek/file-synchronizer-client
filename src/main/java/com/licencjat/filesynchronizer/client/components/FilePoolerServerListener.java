@@ -57,7 +57,7 @@ public class FilePoolerServerListener implements Runnable {
             List<UpdateFile> filesToProcessOnClient = processForNewFiles(Objects.requireNonNull(fileLoggerResponseEntity.getBody()).getLogFileList());
 
             if (!filesToProcessOnClient.isEmpty()) {
-                myFileChangeListener.addFilesFromServerToBuffer(filesToProcessOnClient);
+                myFileChangeListener.addFilesFromServerToBuffer(addAsLogFileList(filesToProcessOnClient));
                 List<UpdateFile> filesToUpdateOnClient = getFilesToUpdateOnClient(filesToProcessOnClient);
                 logger.info("Found {} added/modified files to update on client", filesToProcessOnClient.size());
                 rSyncFileUpdaterProvider.processOnClient(filesToUpdateOnClient);
@@ -67,11 +67,24 @@ public class FilePoolerServerListener implements Runnable {
                 rSyncFileUpdaterProvider.deleteOnClient(filesToDeleteOnClient);
             }
             myFileChangeListener.cleanUpFilesFromServer(Long.parseLong(fileLoggerResponseEntity.getBody().getCurrentTime()));
-            setNewLastSychronizedTime(fileLoggerResponseEntity);
+            setNewLastSynchronizedTime(fileLoggerResponseEntity);
         }
     }
 
-    private void setNewLastSychronizedTime(ResponseEntity<FileLogger> fileLoggerResponseEntity) {
+    private List<LogFile> addAsLogFileList(List<UpdateFile> filesToProcessOnClient) {
+        List<LogFile> logFileList = new ArrayList<>();
+        for(UpdateFile updateFile : filesToProcessOnClient){
+            LogFile logFile = new LogFile();
+            logFile.setLastModified(updateFile.getLastModified());
+            logFile.setFilePath(updateFile.getFilePath());
+            logFile.setAction(updateFile.getAction());
+            logFile.setTimeOfChange(String.valueOf(Instant.now().getEpochSecond()));
+            logFileList.add(logFile);
+        }
+        return logFileList;
+    }
+
+    private void setNewLastSynchronizedTime(ResponseEntity<FileLogger> fileLoggerResponseEntity) {
         String lastSynchronizedTimeFromLogs = Objects.requireNonNull(fileLoggerResponseEntity.getBody()).getLastSynchronizedTime();
         if (Long.parseLong(this.lastSynchronizedTime) < Long.parseLong(lastSynchronizedTimeFromLogs)){
             setLastSynchronizedTime(lastSynchronizedTimeFromLogs);

@@ -1,5 +1,6 @@
 package com.licencjat.filesynchronizer.client.components;
 
+import com.licencjat.filesynchronizer.client.model.LogFile;
 import com.licencjat.filesynchronizer.client.model.UpdateFile;
 import com.licencjat.filesynchronizer.client.rsync.RSyncFileUpdaterProvider;
 import org.slf4j.Logger;
@@ -30,9 +31,9 @@ public class MyFileChangeListener implements FileChangeListener {
 
     Logger logger = LoggerFactory.getLogger(MyFileChangeListener.class);
 
-    List<UpdateFile> filesFromServer = new ArrayList<>();
+    List<LogFile> filesFromServer = new ArrayList<>();
 
-    private long filesFromServerCleanUpInterval = 3000;
+    private long filesFromServerCleanUpInterval = 8000;
 
     public MyFileChangeListener(RSyncFileUpdaterProvider rSyncFileUpdaterProvider, FileUpdaterRequestSender fileUpdaterRequestSender) {
         this.rSyncFileUpdaterProvider = rSyncFileUpdaterProvider;
@@ -73,7 +74,7 @@ public class MyFileChangeListener implements FileChangeListener {
         if (!filesFromServer.isEmpty()) {
             List<String> changedFilesWithoutPrefixesList = mapToStringListWithoutPrefixes(changeSet);
 
-            for (UpdateFile file : filesFromServer) {
+            for (LogFile file : filesFromServer) {
                 if (changedFilesWithoutPrefixesList.contains(file.getFilePath())) {
                     filesToDeleteFromBuffer.add(userLocalDirectory + file.getFilePath());
                 }
@@ -89,7 +90,7 @@ public class MyFileChangeListener implements FileChangeListener {
                 .collect(Collectors.toList());
     }
 
-    private List<UpdateFile> cleanUpFilesFromServerList(List<UpdateFile> filesFromServer, List<String> filesToDeleteFromBuffer) {
+    private List<LogFile> cleanUpFilesFromServerList(List<LogFile> filesFromServer, List<String> filesToDeleteFromBuffer) {
         return filesFromServer.stream()
                 .filter(fileFromServer -> !filesToDeleteFromBuffer.contains(userLocalDirectory + fileFromServer.getFilePath()))
                 .collect(Collectors.toList());
@@ -112,21 +113,21 @@ public class MyFileChangeListener implements FileChangeListener {
         }
     }
 
-    public void addFilesFromServerToBuffer(List<UpdateFile> updateFileList) {
+    public void addFilesFromServerToBuffer(List<LogFile> updateFileList) {
         this.filesFromServer.addAll(updateFileList);
     }
 
-    public void setFilesFromServer(List<UpdateFile> filesFromServer) {
+    public void setFilesFromServer(List<LogFile> filesFromServer) {
         this.filesFromServer = filesFromServer;
     }
 
-    public List<UpdateFile> getFilesFromServer() {
+    public List<LogFile> getFilesFromServer() {
         return this.filesFromServer;
     }
 
     public void cleanUpFilesFromServer(Long currentTime) {
         filesFromServer = filesFromServer.stream()
-                .filter(file -> Long.parseLong(file.getLastModified()) > currentTime - filesFromServerCleanUpInterval)
+                .filter(file -> Long.parseLong(file.getTimeOfChange()) > currentTime - filesFromServerCleanUpInterval)
                 .collect(Collectors.toList());
     }
 }
