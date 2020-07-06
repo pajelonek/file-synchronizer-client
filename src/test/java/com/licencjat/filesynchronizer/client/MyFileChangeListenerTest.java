@@ -1,7 +1,7 @@
 package com.licencjat.filesynchronizer.client;
 
 import com.licencjat.filesynchronizer.client.components.MyFileChangeListener;
-import com.licencjat.filesynchronizer.client.model.UpdateFile;
+import com.licencjat.filesynchronizer.client.model.LogFile;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -73,14 +73,14 @@ public class MyFileChangeListenerTest {
     }
 
     private void mockFilesFromServer() {
-        List<UpdateFile> listFromSever = new ArrayList<>();
+        List<LogFile> listFromSever = new ArrayList<>();
         for (Map.Entry<String, ChangedFile.Type> entry : setOne.entrySet()) {
             if (entry.getValue().equals(ChangedFile.Type.MODIFY)) {
-                UpdateFile updateFile = new UpdateFile();
-                updateFile.setFilePath(entry.getKey());
-                updateFile.setLastModified("123123");
-                updateFile.setAction(entry.getValue().toString());
-                listFromSever.add(updateFile);
+                LogFile logFile = new LogFile();
+                logFile.setFilePath(entry.getKey());
+                logFile.setLastModified("123123");
+                logFile.setAction(entry.getValue().toString());
+                listFromSever.add(logFile);
             }
         }
         myFileChangeListener.addFilesFromServerToBuffer(listFromSever);
