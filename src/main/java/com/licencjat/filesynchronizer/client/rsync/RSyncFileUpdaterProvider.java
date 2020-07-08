@@ -104,7 +104,7 @@ public class RSyncFileUpdaterProvider {
             File file = new File(userLocalDirectory + updateFile.getFilePath());
             if (file.exists() && file.delete()) {
                 logger.info("Successfully deleted file {} on client: " + updateFile.getFilePath());
-            } else throw new Error("Could not find or delete file on client");
+            } else logger.warn("Could not find or delete file on client: " + updateFile.getFilePath());
         }
     }
 

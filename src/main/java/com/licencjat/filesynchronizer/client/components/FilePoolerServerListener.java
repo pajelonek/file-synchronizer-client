@@ -50,7 +50,7 @@ public class FilePoolerServerListener implements Runnable {
      * new lastSynchronized time.
      */
     @Override
-    @Scheduled(fixedDelay = 3000)
+    @Scheduled(fixedDelay = 5000)
     public void run() {
         if (enabled.get()) {
             ResponseEntity<FileLogger> fileLoggerResponseEntity = fileUpdaterRequestSender.getServerLogFile();

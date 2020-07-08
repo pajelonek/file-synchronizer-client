@@ -2,10 +2,7 @@ package com.licencjat.filesynchronizer.client.components;
 
 import com.licencjat.filesynchronizer.client.config.HttpClientConfig;
 import com.licencjat.filesynchronizer.client.config.RestTemplateConfig;
-import com.licencjat.filesynchronizer.client.model.FileLogger;
-import com.licencjat.filesynchronizer.client.model.UpdateFile;
-import com.licencjat.filesynchronizer.client.model.UpdateFilesRQ;
-import com.licencjat.filesynchronizer.client.model.UpdateFilesRS;
+import com.licencjat.filesynchronizer.client.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -61,10 +58,21 @@ public class FileUpdaterRequestSender {
         if (updateFileList.size() > 0) {
             HttpEntity<UpdateFilesRQ> updateFilesRQHttpEntity = createUpdateFilesRQ(updateFileList);
             ResponseEntity<UpdateFilesRS> updateFilesResponseEntity = restTemplate.postForEntity(serverAddress + removeFilesEndpoint, updateFilesRQHttpEntity, UpdateFilesRS.class);
-            if (updateFilesResponseEntity.getStatusCode().value() == 200 && Objects.requireNonNull(updateFilesResponseEntity.getBody()).getStatus().equalsIgnoreCase("ok")) {
+            if (updateFilesResponseEntity.getStatusCode().value() == 200 && validateRemoveFilesRS(updateFilesResponseEntity)) {
                 logger.info("Successfully removed files on server");
-            } else throw new Error("Could not remove files on server");
+            } else logger.warn("Could not remove files on server");
         }
+    }
+
+    private boolean validateRemoveFilesRS(ResponseEntity<UpdateFilesRS> updateFilesResponseEntity) {
+        if(Objects.requireNonNull(updateFilesResponseEntity.getBody()).getStatus().equals("ok")){
+            for(UpdateFileStatus updateFileStatus : updateFilesResponseEntity.getBody().getUpdateFile()){
+                if(updateFileStatus.getStatus().equals("ERROR")){
+                    logger.warn("File {} was not removed successfully on server", updateFileStatus.getFilePath());
+                }
+            }
+        }
+        return true;
     }
 
     /**
