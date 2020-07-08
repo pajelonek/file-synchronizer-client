@@ -47,7 +47,6 @@ public class FileUpdaterRequestSender {
 
     private Logger logger = LoggerFactory.getLogger(FileUpdaterRequestSender.class);
 
-    //ToDo I added UpdateFileStatus -> check validation
     /**
      * This method sends request to the server on the /removeFiles endpoint.
      * If we receive 200 from server we assume that files were removed successfully.

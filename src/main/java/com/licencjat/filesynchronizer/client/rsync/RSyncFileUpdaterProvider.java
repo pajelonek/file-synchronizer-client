@@ -275,6 +275,5 @@ public class RSyncFileUpdaterProvider {
         this.remoteMainFolder = remoteMainFolder;
         return this;
     }
-    //ToDo add one more validation if file exists in rsyncfileupdateExecutor to cover for errors
 
 }

@@ -21,8 +21,6 @@ public class RSyncFileUpdaterExecutor {
     private List<String> sources;
     private String destination;
 
-    //todo check if rsh should be /*"C:\\rsync4j\\bin\\ssh.exe"Binaries.sshBinary()+ " -i " + Binaries.convertPath(sshPrivateKeyPath)*/
-
     /**
      * This method executes rsync based on provided sources and destination.
      * The only one provided rsh is ssh at the moment.
