@@ -1,175 +1,150 @@
-# File-synchronizer client
+##	Instrukcja uruchamiania aplikacji klienckiej
+Kolejne kroki przeprowadzają użytkownika przez proces konfiguracyjny aplikacji klienckiej. Konfiguracja tej części
+jest zalecana po konfiguracji aplikacji serwerowej z powodu zależnych od siebie w kolejności kroków. 
+W zależności od zabezpieczeń sieci oraz komputera, istnieje prawdopodobieństwo na dopasowanie instrukcji do posiadanego 
+sprzętu.
+## Prerekwizyty
+Upewnij się, że zgodnie z częścią teoretyczną pracy posiadasz skonfigurowane narzędzia:
+* Git - [Download & Install Git](https://git-scm.com/downloads)
+* Maven - [Download & Install Maven](https://maven.apache.org/) 
+* OpenSSH Client - [Download & Install OpenSSH Server](https://www.bleepingcomputer.com/news/microsoft/how-to-install-the-built-in-windows-10-openssh-server/)
+* Java - [Download & Install Java](https://maven.apache.org/)
 
-It's a client side of the project regarding file synchronizing through ssh with rsync on Windows 10.
 
-The client is responsible for detecting changes in watching directory, sending files through ssh protocol with the use of rsync binaries.
+###1.	Konfiguracja pliku application-properties
+Kiedy użytkownik wypakuje pliki do lokacji posiadającej wolne miejsce na dysku, pierwszym krokiem konfiguracyjnym 
+jest ustawienie wartości właściwości w pliku application-properties. Plik ten znajduje się w ścieżce:
+```
+\src\main\resources\application-properties
+```
+Jest to zwykły plik tekstowy, korzystający z wbudowanych właściwości pozwalający na definiowanie nowych 
+przez użytkownika.
+```
+client.name = PC1   
+environment = PROD   
+logging.level.root = INFO   
+file.synchronizer.address = http://IP:PORT   
+file.synchronizer.fileList.endpoint=/getFileList  
+file.synchronizer.registerFiles.endpoint=/registerFiles
+file.synchronizer.removeFiles.endpoint=/removeFiles  
+file.synchronizer.logfile.endpoint=/getFileLogList  
+user.local.directory=C:\\clientFiles  
+rsync.remote.shell=ssh  
+ssh.hostname=server   
+ ```
+Przedstawiony fragment kodu przedstawia plik należący do rozwiązania wchodzącego w skład kodu źródłowego.
+Do właściwości zdefiniowanych przez Spring należą:
+-	logging.level.root - określa stopień widoczności logów wyświetlanych przez aplikację. Wszystkimi możliwościami 
+podanymi od najmniejszej widoczności są: OFF, FATAL, ERROR, WARN, INFO, DEBUG. TRACE oraz ALL. Zalecane 
+pozostawienie domyślnej wartości INFO ponieważ większa widoczność logów powoduje ich mniejszą przejrzystość i zalecana 
+jest w przypadku diagnozowania błędów programisty.
+Do właściwości zdefiniowanych należą:
+-	client.name - jest to nazwa identyfikująca aplikację kliencką. Zalecane jest, aby dla każdej aplikacji wybrać 
+unikalną nazwę
+-	environment
+-	file.synchronizer.fileList.endpoint
+-	file.synchronizer.setModificationDate.endpoint
+-	file.synchronizer.removeFiles.endpoint
+-	file.synchronizer.logfile.endpoint
+-	user.local.directory
+-	rsync.remote.shell
+-	ssh.hostname
  
-
-Except installing necessary feature it is required to configure application.properties file as well as rsync with ssh configurations
-which is more described below.
-
-## Prerequisites
-Make sure you have installed all of the following prerequisites on your development machine:
-* Git - [Download & Install Git](https://git-scm.com/downloads). OSX and Linux machines typically have this already installed.
-* Maven - [Download & Install Maven](https://maven.apache.org/) - Dependency Management
-* OpenSSH Client - [Download & Install OpenSSH Server](https://www.bleepingcomputer.com/news/microsoft/how-to-install-the-built-in-windows-10-openssh-server/). Windows 10 should already have this feature
-enabled. No action needed right now.
-* Java - [Download & Install Java](https://maven.apache.org/) - Runtime Environment essential to run application. At least 1.8 version. 
-
-
-## Clone repository
-To clone repository copy link from github, run git, go to the directory where you want
-to copy repository and then type:
-
-```
-git clone [copied link from github]
-```
-
-### Configuration of application-properties
-After you downloaded project, you can configure properties for your client.
-Application-properties file can be found where you cloned repository under:
-```
-src/main/resources/application.properties
-```
-Now configure properties values as suggested below:
-```
-client.name = PC1 /* This name notifies server which client applies changes to server directory.
-This can be changed to any name of your choose. Remember to name clients differently!  */
-environment = PROD  /* Property for testing purposes, do not change */
-logging.level.root = INFO /* For futher development you may want to change to DEBUG */
-
-file.synchronizer.address = http://IP:PORT  /* Type your server IP address and port  */
-
-/* Four properties below describe endpoints for specific actions on server, do not change unless
-you change endpoint on server */
-file.synchronizer.fileList.endpoint=/getFileList
-file.synchronizer.setModificationDate.endpoint=/setModificationDate
-file.synchronizer.removeFiles.endpoint=/removeFiles
-file.synchronizer.logfile.endpoint=/getFileLogList
-
-/* Provide the directory where you want to synchronize files with server */
-user.local.directory=C:\\clientFiles
-/* Remote shell to use via rsync, application only provies ssh, do not change */
-rsync.remote.shell=ssh
-
-/* Name of the server from ssh config, configuration will be in part "SSH configuration" */
-ssh.hostname=server
-```
-## Rsync configuration
-In this project it is essential to use rsync binaries as well as ssh binaries for fluent connectivity.
-Default location for those binaries is:
-```
-C:\Users\User\rsync4j
-```
-It is possible to use another location than C:\Users\User\rsync4j. You only have to set up the RSYNC4J_HOME 
-environment variable to point to the top-level directory (doesn't have to exist) where you want to house the binaries and then restart
-your working station.
-### Installing
-
-A step by step series of examples that tell you how to get a development environment running
-
-Firstly we need to install project along with all required dependencies:
-
-Go to the folder where you cloned repository and run:
-```
-mvn clean install
-```
-Maven will download rsync and ssh binaries from Cygwin distribution which are required in this project.
-If build is completed successfully, continue to the rsync configuration.
-
-### SSH Client configuration
-##### Generating ssh key pairs
-Navigate to the directory where you choose to store binaries and then run:
-```
+###2.	Konfiguracja rsync
+Aplikacja kliencka korzysta z biblioteki Rsync4J, która każdorazowo podczas procesu uruchamiania sprawdź istnienie 
+plików binarnych rsync, w przypadku nie znalezienia, pobiera wymagane pliki. Domyślnym miejsce pobrania plików 
+jest C:/Użytkownicy/Użytkownik/rsync4j.  
+Aby zmienić domyślną lokalizację, należy dodać zmienną środowiskową  o nazwie RSYNC4J_HOME do ścieżek w liście “Path”. 
+Zalecane  jest zresetowanie stacji roboczej w celu odświeżenia oprogramowania i wczytania nowej zmiennej 
+przez system.
+###3.	Instalacja zależności
+W celu pobrania wszystkich wymaganych zależności należy otworzyć dowolny wiersz poleceń i uruchomić:
+ ```
+mvn clean install           
+ ```                                              
+Spowoduje to pobranie wszystkich wymaganych zależności określonych w pliku pom.xml przez Apache Maven. W przypadku 
+wyświetlenia w wierszu poleceń komunikatu “BUILD SUCCESS” instalacja przebiegła pomyślnie.
+###4.	Konfiguracja OpenSSH Client
+####4.1	Generowanie kluczy ssh
+Otwórz dowolny wiersz linii komend w miejscu, które wybrałeś na przechowywanie plików binarnych rsync i następnie wpisz:
+ ```
 ssh-keygen
+ ```
+Program najpierw zapyta użytkownika o nazwę pliku przechowującego klucz ssh jednak zalecane jest nie zmienianie wartości
+ domyślnych. Następnie wiersz poleceń wyświetli pytanie o wybranie hasła, z perspektywy rozwiązanie wymagane jest nie 
+ wybieranie żadnego hasła i pozostawienie tych pól(hasło i potwierdzenie hasła) jako pustych. Po wykonaniu zaleceń 
+ program powinien wygenerować dwa klucze: 
+- id_rsa - klucz prywatny 
+- id_rsa.pub - klucz publiczny.
+####4.2	Generowanie pliku konfiguracyjnego
+Klient protokołu ssh pobiera informacje ułatwiające komunikację z serwerem poprzez plik “config”. Rozwiązanie 
+zakłada utworzenie pliku konfiguracyjnego w celu ułatwienia komunikacji.
+ 
+Aby go utworzyć, otwórz dowolny edytor plików tekstowych i zapisz plik bez rozszerzenia z nazwą “config” w lokalizacji,
+ który została wybrana na przechowywanie plików binarnych rsync, czyli wybrana_ścieżka/home/Użytkownik/.ssh/.
 ```
-Firstly you will be asked to choose name for the file storing your key, you can leave it empty as by default.
-
-Then you will be asked to provide password, just click enter to give it empty password. Any other password configuration will 
-application to fail. Then you will be asked to enter password again and again leave it empty.
-
-You should now see your public and private key name with your random image. If you have already installed OpenSSH Client(it is by deufalt enabled in Windows 10)
-operating system may generate your key in 
-```
-.C:/Users/Username/.ssh
-```
-that's why you should check carefully where your keys are.
-
-##### Generate SSH config file
-SSH config file contains information necessary for ssh clients to connect to the ssh server via alias.
-
-To create ssh config file, open text editor and create file WITHOUT EXTENSION with name = "config".
-Here there is example of the content of config file:
-```
-Host server:
-     HostName 10.10.10.10
+Host server: 
+     HostName 10.10.10.10  
      User username
 ```
-In application-properties you could found property:
-```
-ssh.hostname
-```
-this property need to be equal to the one provided in ssh config file as hostname of the ssh server with server application.
-Remember that config file has specific pattern:
-```
-Host hostname:
-<-5 spaces->Property Value
-```
-You can read about ssh config here: [How to use SSH Config file](https://www.ssh.com/ssh/config/).
+Powyższy fragment kodu zawiera przykładowy plik “config” gdzie:
+-	Host - oznacza nazwę jaką wybieramy na nazwanie naszego komputera z serwerem ssh. Musimy być identyczne jak 
+zmienna “ssh.hostname” z pliku application.properties.
+-	HostName - adres sieciowy komputera z uruchomionym serwerem ssh.
+-	User - nazwa użytkownika, który uruchamia w swojej przestrzeni dyskowej aplikacji serwerową rozwiązania
+Należy pamiętać o wzorze, jaki należy przestrzegać wypełniając wartości pliku “config”. Każda właściwość definiowana 
+dla wybranego hosta, musimy być oddalona od początku linii o 5 spacji. Nieprzestrzeganie wzorca powoduje nie wczytanie 
+pliku “config” przez klienta ssh.
+####4.3	Zmiana zabezpieczeń pliku “config” oraz kluczy ssh
+Z powodu zaprojektowania SSH pod systemy rodziny UNIX, musimy zmienić uprawnienia pliku “config” oraz obu kluczy ssh 
+aby były poprawnie odczytywane przez protokół.
 
-##### Changing permission of config file and ssh keys pair
-SSH protocol was designed to work on UNIX-based systems, because of that we need to manually change permissions of config files, as well as ssh keys.
-
-For all 3 files(public key, private key and config file):
-- Open properties
-- Go to security
-- Open Advanced
-- Disable inheritance
-- Delete all users permissions EXCEPT SYSTEM AND YOURS USER
-- Click confirm
-### Sending ssh key to your ssh server
-##### To securely copy ssh key you should have ssh server on your machine for server application.
-##### It is recommended to not find other solution, just come back to this step after finishing "SSH SERVER configuration" in server application README
-
-To copy ssh keys we simply need to copy them to server ssh destination:
+Dla każdego z wymienionych plików:
+1.	Otwórz “Właściwości”
+2.	Przejdź do zakładki “Zabezpieczenia”
+3.	Kliknij przycisk “Zaawansowane”
+4.	Wybierz “Wyłącz dziedziczenie”
+5.	Usuń dostęp wszystkich użytkowników z wyjątkiem użytkownika “System” oraz obecnie zalogowane
+6.	Wciśnij przycisk “Zastosuj”
+ 
+####4.4 Wysyłanie klucza SSH na serwer
+Aby bezpiecznie skopiować klucz, należy najpierw przeprowadzić konfigurację aplikacji serwera, gdzie tworzymy plik 
+“authorized_keys”, który będzie przechowywać nasz klucz publiczny.
+Aby bezpiecznie skopiować pliki, należy otworzyć wiersz poleceń oraz wpisać:
+o	scp .ssh/id_rsa.pub SshHost:.ssh/authorized_keys
+gdzie:
+•	SshHost - to nazwa hosta, którą wybraliśmy w pliku “config”.
+ 
+####4.5 Sprawdzanie poprawności konfiguracji
+Aby sprawdzić łączność z serwerem, należy otworzyć dowolny wiersz poleceń wpisać:
 ```
-scp .ssh/id_rsa.pub SshHostnameFromConfig:.ssh/authorized_keys
+ssh sshHost
 ```
-It should properly copy your ssh_key to server file.
-If not, check if you have /.ssh/authorized_keys path in your server directory
-
-##### Copying ssh config
-Correct destination for ssh config is where you copied your binaries:
+Jeżeli po wpisaniu komendy zostałeś poprawnie połączony z serwerem ssh, konfiguracja przebiegła pomyślnie, w przeciwnym 
+wypadku**** powtórzenie konfiguracji aplikacji od początku.
+###5.	Uruchamianie testów
+Aby uruchomić testy aplikacji, uruchom wiersz linii komend w lokalizacji projektu a następnie wpisz:
 ```
-rsync_binaries_path/home/User/.ssh/config
+mvn test  
 ```
-##### Checking ssh
-After you placed your config and set-up ssh server on your machine with server application run:
+W przypadku wyświetlenia komunikatu “BUILD SUCCESS” testy przebiegły pomyślnie i  aplikacja jest gotowa do uruchomienia.
+###6.	Uruchamianie aplikacji
+W celu uruchomienia aplikacji, otwórz dowolny wiersz poleceń w lokalizacji projektu i wpisz:
 ```
-ssh sshHostNameFromConfig
+mvn clean spring-boot:run  
 ```
-and check if you can successfully connect to your server
-
-## Running the tests
-
-To run test run:
-
+Wpisanie wymienionych komendy spowoduje zbudowanie projektu, następnie usunięciu niepotrzebnych plików, by na końcu uruchomić aplikację.
+###7.	Tworzenie pliku wykonawczego
+Aby utworzyć plik wykonawczy aplikacji serwera należy otworzyć wiersz poleceń w lokalizacji projektu, po czym wpisać:
 ```
-mvn test
+mvn clean package spring-boot:repackage 
 ```
-
-## Deployment
-
-To create executable jar go to your repository directory and run:
+Spowoduje to utworzenie pliku wykonawczego filesynchronizer-client-1.0.0.jar w lokalizacji target/.
+###8.	Uruchamianie pliku wykonawczego
+Po poprawnym wykonaniu poleceń z poprzedniego podpunktu, należy uruchomić dowolny wiersz poleceń, odnaleźć utworzony 
+plik oraz wpisać:
 ```
-mvn clean package spring-boot:repackage
+java -jar filesynchronizer-client-1.0.0.jar
 ```
-and then to execute jar:
-```
-java -jar project.jar
-```
-## Authors
-
-* **Paweł Jelonek** - *Initial work* 
-
-#
+## Autor
+* **Paweł Jelonek** 

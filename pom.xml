@@ -10,16 +10,16 @@
     </parent>
     <groupId>com.licencjat.filesynchronizer.client</groupId>
     <artifactId>file-synchronizer-client</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>file-synchronizer-client</name>
-    <description>Simple client-server file synchronizer - client</description>
+    <description>File synchronizer - client</description>
     <packaging>jar</packaging>
 
     <properties>
         <java.version>1.8</java.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <start-class>com.licencjat.filesynchronizer.client.FileSynchronizerClientApplication</start-class>
+        <start-class>pl.jelonek.filesynchronizer.client.FileSynchronizerClientApplication</start-class>
     </properties>
 
     <dependencies>
