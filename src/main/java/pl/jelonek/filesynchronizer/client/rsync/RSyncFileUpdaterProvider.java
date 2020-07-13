@@ -81,13 +81,13 @@ public class RSyncFileUpdaterProvider {
                 .filter(file -> file.getAction().equals("MODIFY") || file.getAction().equals("ADD"))
                 .collect(Collectors.toList());
 
-        logger.info("Found {} files to update on server: {}", filesToSendToServerList.size(), filesToSendToServerList.toString());
+        logger.info("Found {} files to update on server", filesToSendToServerList.size());
         processOnServer(filesToSendToServerList);
 
         List<UpdateFile> filesToRemoveOnServerList = clientFileList.stream()
                 .filter(file -> file.getAction().equals("DELETE"))
                 .collect(Collectors.toList());
-        logger.info("Found {} files to remove on server: {}", filesToRemoveOnServerList.size(), filesToRemoveOnServerList.toString());
+        logger.info("Found {} files to remove on server", filesToRemoveOnServerList.size());
         fileUpdaterRequestSender.removeFilesOnServer(filesToRemoveOnServerList);
     }
 
@@ -192,13 +192,14 @@ public class RSyncFileUpdaterProvider {
      * @param clientFileList is the list of all files to modify on client directory
      * @param prefixOfPath   is the unique prefix of path that mathes all clientFileList elements
      */
+    //ToDo clientFileList?
     private void modifyFilesOnClient(List<UpdateFile> clientFileList, String prefixOfPath) {
         List<String> sourcesList = clientFileList.stream()
                 .map(UpdateFile::getFilePath)
                 .map(filePath -> sshServerHostName + ":" + remoteMainFolder + filePath)
                 .collect(Collectors.toList());
 
-        logger.info("Downloading {} file/files from client", sourcesList.toString());
+        logger.info("Downloading {} file/files from server", sourcesList.toString());
         rSyncFileUpdaterExecutor
                 .setSources(sourcesList)
                 .setDestination(userLocalDirectory + prefixOfPath + "\\")

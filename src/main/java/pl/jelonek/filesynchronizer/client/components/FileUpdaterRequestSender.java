@@ -96,12 +96,12 @@ public class FileUpdaterRequestSender {
      * @param updateFileList is the list of all files to update on server.
      */
     public void registerFile(List<UpdateFile> updateFileList) {
-        logger.info("Registering change of file on server for {}", updateFileList.toString());
+        logger.info("Registering changes on server for {} files", updateFileList.size());
         HttpEntity<UpdateFilesRQ> updateFilesRQHttpEntity = createUpdateFilesRQ(updateFileList);
         ResponseEntity<UpdateFilesRS> updateFilesResponseEntity = restTemplate.postForEntity(serverAddress + registerFilesEndpoint, updateFilesRQHttpEntity, UpdateFilesRS.class);
         if (updateFilesResponseEntity.getStatusCode().value() == 200 && Objects.requireNonNull(updateFilesResponseEntity.getBody()).getStatus().equalsIgnoreCase("ok")) {
-            logger.info("Successfully registered file on server");
-        } else throw new Error("Could not update modification date on server");
+            logger.info("Successfully registered files/file on server");
+        } else throw new Error("Could not registered files/file on server");
     }
 
     /**
