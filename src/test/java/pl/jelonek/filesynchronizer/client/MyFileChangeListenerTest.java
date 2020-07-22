@@ -47,7 +47,7 @@ public class MyFileChangeListenerTest {
 
 
         //given
-        List<ChangedFile> changedFileList = myFileChangeListener.clearChangeSetFromFilesFromServer(changedFilesTest);
+        Set<ChangedFile> changedFileList = myFileChangeListener.clearChangeSetFromFilesFromServer(changedFilesTest);
 
         //then
         assertThat(myFileChangeListener.getFilesFromServer().isEmpty()).isTrue();
