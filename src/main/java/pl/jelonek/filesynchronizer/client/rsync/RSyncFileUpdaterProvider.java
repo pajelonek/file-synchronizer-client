@@ -1,6 +1,7 @@
 package pl.jelonek.filesynchronizer.client.rsync;
 
 
+import org.apache.commons.collections4.ListUtils;
 import pl.jelonek.filesynchronizer.client.components.FileUpdaterRequestSender;
 import pl.jelonek.filesynchronizer.client.config.HttpClientConfig;
 import pl.jelonek.filesynchronizer.client.config.RestTemplateConfig;
@@ -53,17 +54,15 @@ public class RSyncFileUpdaterProvider {
     public void processComparing(List<UpdateFile> serverFileList, List<UpdateFile> clientFileList) {
         logger.info("Starting comparing files with server");
 
-        List<UpdateFile> filesToUpdateOnClientList = getExistingFilesToUpdate(serverFileList, clientFileList);
-        logger.info("Found {} files to update on client", filesToUpdateOnClientList.size());
+        List<UpdateFile> filesToUpdateOnClient = getExistingFilesToUpdate(serverFileList, clientFileList);
+        logger.info("Found {} files to update on client", filesToUpdateOnClient.size());
 
         List<UpdateFile> filesNotFoundOnClient = getNewFilesToUploadOnClient(serverFileList, clientFileList);
         logger.info("Found {} new files to download on client", filesNotFoundOnClient.size());
 
-        List<UpdateFile> combinedListOfFilesToDownload = Stream.of(filesToUpdateOnClientList, filesNotFoundOnClient)
-                .flatMap(List::stream)
-                .collect(Collectors.toList());
+        List<UpdateFile> filesToDownloadOnClient = ListUtils.union(filesToUpdateOnClient, filesNotFoundOnClient);
 
-        processOnClient(combinedListOfFilesToDownload);
+        processOnClient(filesToDownloadOnClient);
 
         List<UpdateFile> filesToDeleteOnClientList = getFilesToDeleteOnClient(serverFileList, clientFileList);
         logger.info("Found {} new files to delete on client", filesToDeleteOnClientList.size());

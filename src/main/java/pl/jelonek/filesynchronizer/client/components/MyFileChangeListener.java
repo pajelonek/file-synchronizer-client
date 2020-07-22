@@ -48,7 +48,7 @@ public class MyFileChangeListener implements FileChangeListener {
      */
     @Override
     public void onChange(Set<ChangedFiles> changeSet) {
-        List<ChangedFile> filteredFiles = clearChangeSetFromFilesFromServer(changeSet);
+        Set<ChangedFile> filteredFiles = clearChangeSetFromFilesFromServer(changeSet);
         Map<String, ChangedFile.Type> updatedFilesMap = new HashMap<>();
         for (ChangedFile changedFile : filteredFiles) {
             if ((changedFile.getType().equals(ChangedFile.Type.MODIFY) || changedFile.getType().equals(ChangedFile.Type.ADD) && !isLocked(changedFile.getFile().toPath())) || changedFile.getType().equals(ChangedFile.Type.DELETE)) {
@@ -68,17 +68,13 @@ public class MyFileChangeListener implements FileChangeListener {
      * @param changeSet is the set of changed files in watched client directory
      * @return filtered @param as ChangedFile list
      */
-    public List<ChangedFile> clearChangeSetFromFilesFromServer(Set<ChangedFiles> changeSet) {
+    public Set<ChangedFile> clearChangeSetFromFilesFromServer(Set<ChangedFiles> changeSet) {
         List<String> filesToDeleteFromBuffer = new ArrayList<>();
 
         if (!filesFromServer.isEmpty()) {
-            List<String> changedFilesWithoutPrefixesList = mapToStringListWithoutPrefixes(changeSet);
+            Set<String> changedFilesWithoutPrefixesList = mapToStringListWithoutPrefixes(changeSet);
 
-            for (LogFile file : filesFromServer) {
-                if (changedFilesWithoutPrefixesList.contains(file.getFilePath())) {
-                    filesToDeleteFromBuffer.add(userLocalDirectory + file.getFilePath());
-                }
-            }
+            addChangesFromServerToLocalBuffer(filesToDeleteFromBuffer, changedFilesWithoutPrefixesList);
 
             filesFromServer = cleanUpFilesFromServerList(filesFromServer, filesToDeleteFromBuffer);
         }
@@ -87,7 +83,22 @@ public class MyFileChangeListener implements FileChangeListener {
                 .map(ChangedFiles::getFiles)
                 .flatMap(Collection::stream)
                 .filter(file -> !filesToDeleteFromBuffer.contains(file.getFile().getPath()))
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * This method add changes caught by FileSystemWatcher to buffer because those changes were
+     * pulled from server and should be ignored locally.
+     *
+     * @param filesToDeleteFromBuffer is the list of files to delete from buffer
+     * @param changedFilesWithoutPrefixesList is the set of changed files without paths prefixes
+     */
+    private void addChangesFromServerToLocalBuffer(List<String> filesToDeleteFromBuffer, Set<String> changedFilesWithoutPrefixesList) {
+        filesFromServer.stream()
+                .filter(file -> changedFilesWithoutPrefixesList.contains(file.getFilePath()))
+                .forEach(file -> {
+                    filesToDeleteFromBuffer.add(userLocalDirectory + file.getFilePath());
+                });
     }
 
     private List<LogFile> cleanUpFilesFromServerList(List<LogFile> filesFromServer, List<String> filesToDeleteFromBuffer) {
@@ -96,12 +107,12 @@ public class MyFileChangeListener implements FileChangeListener {
                 .collect(Collectors.toList());
     }
 
-    private List<String> mapToStringListWithoutPrefixes(Set<ChangedFiles> changeSet) {
+    private Set<String> mapToStringListWithoutPrefixes(Set<ChangedFiles> changeSet) {
         return changeSet.stream()
                 .map(ChangedFiles::getFiles)
                 .flatMap(Collection::stream)
                 .map(file -> file.getFile().getPath().replace(userLocalDirectory, ""))
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
     }
 
 
