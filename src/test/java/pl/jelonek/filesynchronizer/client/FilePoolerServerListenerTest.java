@@ -31,59 +31,59 @@ public class FilePoolerServerListenerTest {
         assertThat(filePoolerServerListener).isNotNull();
     }
 
-    @Test
-    void filesToDeleteOnClientTest() {
-        //when
-        createSetOne();
-
-        //given
-        List<UpdateFile> filesToDeleteOnClient = filePoolerServerListener.getFilesToDeleteOnClient(sampleUpdateFileList);
-        long deletedFilesSize = sampleUpdateFileList.stream()
-                .filter(file -> file.getAction().equals("DELETE"))
-                .count();
-        //then
-        assertThat(filesToDeleteOnClient.size()).isEqualTo(deletedFilesSize);
-
-        boolean isActionCorrect = filesToDeleteOnClient.stream()
-                .map(UpdateFile::getAction)
-                .allMatch(action -> action.equals("DELETE"));
-        assertThat(isActionCorrect).isEqualTo(true);
-    }
-
-    @Test
-    void getFilesToUpdateOnClient() {
-        //when
-        createSetOne();
-
-        //given
-        List<UpdateFile> filesToUpdateOnClientList = filePoolerServerListener.getFilesToUpdateOnClient(sampleUpdateFileList);
-        long updatedFilesSize = sampleUpdateFileList.stream()
-                .filter(file -> file.getAction().equals("ADD") || file.getAction().equals("MODIFY"))
-                .count();
-        //then
-        assertThat(filesToUpdateOnClientList.size()).isEqualTo(updatedFilesSize);
-
-        boolean isActionCorrect = filesToUpdateOnClientList.stream()
-                .map(UpdateFile::getAction)
-                .allMatch(action -> action.equals("ADD") || action.equals("MODIFY"));
-        assertThat(isActionCorrect).isEqualTo(true);
-    }
-
-    @Test
-    void processForNewFilesTest() {
-        //when
-        createSetTwo();
-        filePoolerServerListener.setLastSynchronizedTime("10");
-
-        //given
-        List<UpdateFile> processedNewFiles = filePoolerServerListener.processForNewFiles(sampleLogFileList);
-
-        //then
-        assertThat(processedNewFiles.size()).isEqualTo(sampleLogFileAnswerMap.size());
-        for (UpdateFile updateFile : processedNewFiles) {
-            assertThat(sampleLogFileAnswerMap.get(updateFile.getFilePath())).isEqualTo(updateFile.getLastModified());
-        }
-    }
+//    @Test
+//    void filesToDeleteOnClientTest() {
+//        //when
+//        createSetOne();
+//
+//        //given
+//        List<UpdateFile> filesToDeleteOnClient = filePoolerServerListener.getFilesToDeleteOnClient(sampleUpdateFileList);
+//        long deletedFilesSize = sampleUpdateFileList.stream()
+//                .filter(file -> file.getAction().equals("DELETE"))
+//                .count();
+//        //then
+//        assertThat(filesToDeleteOnClient.size()).isEqualTo(deletedFilesSize);
+//
+//        boolean isActionCorrect = filesToDeleteOnClient.stream()
+//                .map(UpdateFile::getAction)
+//                .allMatch(action -> action.equals("DELETE"));
+//        assertThat(isActionCorrect).isEqualTo(true);
+//    }
+//
+//    @Test
+//    void getFilesToUpdateOnClient() {
+//        //when
+//        createSetOne();
+//
+//        //given
+//        List<UpdateFile> filesToUpdateOnClientList = filePoolerServerListener.getFilesToUpdateOnClient(sampleUpdateFileList);
+//        long updatedFilesSize = sampleUpdateFileList.stream()
+//                .filter(file -> file.getAction().equals("ADD") || file.getAction().equals("MODIFY"))
+//                .count();
+//        //then
+//        assertThat(filesToUpdateOnClientList.size()).isEqualTo(updatedFilesSize);
+//
+//        boolean isActionCorrect = filesToUpdateOnClientList.stream()
+//                .map(UpdateFile::getAction)
+//                .allMatch(action -> action.equals("ADD") || action.equals("MODIFY"));
+//        assertThat(isActionCorrect).isEqualTo(true);
+//    }
+//
+//    @Test
+//    void processForNewFilesTest() {
+//        //when
+//        createSetTwo();
+//        filePoolerServerListener.setLastSynchronizedTime("10");
+//
+//        //given
+//        List<UpdateFile> processedNewFiles = filePoolerServerListener.processForNewFiles(sampleLogFileList);
+//
+//        //then
+//        assertThat(processedNewFiles.size()).isEqualTo(sampleLogFileAnswerMap.size());
+//        for (UpdateFile updateFile : processedNewFiles) {
+//            assertThat(sampleLogFileAnswerMap.get(updateFile.getFilePath())).isEqualTo(updateFile.getLastModified());
+//        }
+//    }
 
     private void createSetOne() {
         sampleUpdateFileList = new ArrayList<>();

@@ -45,61 +45,61 @@ class FilePoolerStartupRunnerTest {
         assertThat(filePoolerStartupRunner.getEnvironment()).isEqualTo("TEST");
     }
 
-    @Test
-    void test() {
-        createResourcesFilesSetOne();
-    }
-
-    @Test
-    void getClientFilesFromSetOneTest() {
-        //when
-        createResourcesFilesSetOne();
-
-        //given
-        List<UpdateFile> clientFileList = new ArrayList<>();
-        filePoolerStartupRunner.listFilesFromDirectory(Paths.get(userLocalDirectory + mainTestDirectory), clientFileList);
-
-        //then
-        List<String> filePathsFromSetOne = clientFileList.stream()
-                .map(UpdateFile::getFilePath)
-                .map(filePath -> filePath.replace("\\", "/"))
-                .collect(Collectors.toList());
-        List<String> lastModifiedList = clientFileList.stream()
-                .map(UpdateFile::getLastModified)
-                .collect(Collectors.toList());
-
-        assertThat(filePathsFromSetOne).isEqualTo(setOne);
-        assertThat(clientFileList.size()).isEqualTo(setOne.size());
-
-        for (String lastModified : lastModifiedList) {
-            assertThat(Long.parseLong(lastModified)).isPositive();
-        }
-    }
-
-    @Test
-    void getClientFilesFromSetTwoTest() {
-        //when
-        createResourcesFilesSetTwo();
-
-        //given
-        List<UpdateFile> clientFileList = new ArrayList<>();
-        filePoolerStartupRunner.listFilesFromDirectory(Paths.get(userLocalDirectory + mainTestDirectory), clientFileList);
-
-        //then
-        List<String> filePathsFromSetTwo = clientFileList.stream()
-                .map(UpdateFile::getFilePath)
-                .collect(Collectors.toList());
-        List<String> lastModifiedList = clientFileList.stream()
-                .map(UpdateFile::getLastModified)
-                .collect(Collectors.toList());
-
-        assertThat(filePathsFromSetTwo).isEqualTo(setTwo);
-        assertThat(clientFileList.size()).isEqualTo(setTwo.size());
-
-        for (String lastModified : lastModifiedList) {
-            assertThat(Long.parseLong(lastModified)).isPositive();
-        }
-    }
+//    @Test
+//    void test() {
+//        createResourcesFilesSetOne();
+//    }
+//
+//    @Test
+//    void getClientFilesFromSetOneTest() {
+//        //when
+//        createResourcesFilesSetOne();
+//
+//        //given
+//        List<UpdateFile> clientFileList = new ArrayList<>();
+//        filePoolerStartupRunner.listFilesFromDirectory(Paths.get(userLocalDirectory + mainTestDirectory), clientFileList);
+//
+//        //then
+//        List<String> filePathsFromSetOne = clientFileList.stream()
+//                .map(UpdateFile::getFilePath)
+//                .map(filePath -> filePath.replace("\\", "/"))
+//                .collect(Collectors.toList());
+//        List<String> lastModifiedList = clientFileList.stream()
+//                .map(UpdateFile::getLastModified)
+//                .collect(Collectors.toList());
+//
+//        assertThat(filePathsFromSetOne).isEqualTo(setOne);
+//        assertThat(clientFileList.size()).isEqualTo(setOne.size());
+//
+//        for (String lastModified : lastModifiedList) {
+//            assertThat(Long.parseLong(lastModified)).isPositive();
+//        }
+//    }
+//
+//    @Test
+//    void getClientFilesFromSetTwoTest() {
+//        //when
+//        createResourcesFilesSetTwo();
+//
+//        //given
+//        List<UpdateFile> clientFileList = new ArrayList<>();
+//        filePoolerStartupRunner.listFilesFromDirectory(Paths.get(userLocalDirectory + mainTestDirectory), clientFileList);
+//
+//        //then
+//        List<String> filePathsFromSetTwo = clientFileList.stream()
+//                .map(UpdateFile::getFilePath)
+//                .collect(Collectors.toList());
+//        List<String> lastModifiedList = clientFileList.stream()
+//                .map(UpdateFile::getLastModified)
+//                .collect(Collectors.toList());
+//
+//        assertThat(filePathsFromSetTwo).isEqualTo(setTwo);
+//        assertThat(clientFileList.size()).isEqualTo(setTwo.size());
+//
+//        for (String lastModified : lastModifiedList) {
+//            assertThat(Long.parseLong(lastModified)).isPositive();
+//        }
+//    }
 
     private void createResourcesFilesSetOne() {
         createSetOne();

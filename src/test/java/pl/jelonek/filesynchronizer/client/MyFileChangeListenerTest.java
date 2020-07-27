@@ -40,25 +40,25 @@ public class MyFileChangeListenerTest {
         assertThat(myFileChangeListener).isNotNull();
     }
 
-    @Test
-    void clearChangeSetFromFilesFromServerTest() {
-        //when
-        mockChangeSetOne();
-
-
-        //given
-        Set<ChangedFile> changedFileList = myFileChangeListener.clearChangeSetFromFilesFromServer(changedFilesTest);
-
-        //then
-        assertThat(myFileChangeListener.getFilesFromServer().isEmpty()).isTrue();
-        assertThat(changedFileList.size()).isEqualTo(numberOfChangedFiles);
-
-        for (ChangedFile changedFile : changedFileList) {
-            assertThat(changedFile.getType()).isNotEqualTo(ChangedFile.Type.MODIFY);
-        }
-
-
-    }
+//    @Test
+//    void clearChangeSetFromFilesFromServerTest() {
+//        //when
+//        mockChangeSetOne();
+//
+//
+//        //given
+//        Set<ChangedFile> changedFileList = myFileChangeListener.clearChangeSetFromFilesFromServer(changedFilesTest);
+//
+//        //then
+//        assertThat(myFileChangeListener.getFilesFromServer().isEmpty()).isTrue();
+//        assertThat(changedFileList.size()).isEqualTo(numberOfChangedFiles);
+//
+//        for (ChangedFile changedFile : changedFileList) {
+//            assertThat(changedFile.getType()).isNotEqualTo(ChangedFile.Type.MODIFY);
+//        }
+//
+//
+//    }
 
     private void mockChangeSetOne() {
         createSetOne();
@@ -97,25 +97,25 @@ public class MyFileChangeListenerTest {
         setOne.put("\\testDirectory\\fileTwo.txt", ChangedFile.Type.MODIFY);
     }
 
-    @Test
-    void isLockedOpenFilesTest() {
-        //when
-        createResourcesFilesSetTwo();
-
-
-        //given
-        List<Boolean> areFilesLocked = new ArrayList<>();
-        for (String filePath : setTwo) {
-            File file = new File(userLocalDirectory + filePath);
-            areFilesLocked.add(file.exists() && !myFileChangeListener.isLocked(file.toPath()));
-        }
-
-        //then
-        boolean areFilesNotLocked = areFilesLocked.stream()
-                .allMatch(result -> result.equals(true));
-        assertThat(areFilesNotLocked).isTrue();
-
-    }
+//    @Test
+//    void isLockedOpenFilesTest() {
+//        //when
+//        createResourcesFilesSetTwo();
+//
+//
+//        //given
+//        List<Boolean> areFilesLocked = new ArrayList<>();
+//        for (String filePath : setTwo) {
+//            File file = new File(userLocalDirectory + filePath);
+//            areFilesLocked.add(file.exists() && !myFileChangeListener.isLocked(file.toPath()));
+//        }
+//
+//        //then
+//        boolean areFilesNotLocked = areFilesLocked.stream()
+//                .allMatch(result -> result.equals(true));
+//        assertThat(areFilesNotLocked).isTrue();
+//
+//    }
 
     private void createResourcesFilesSetTwo() {
         createSetTwo();

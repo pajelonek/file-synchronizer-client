@@ -40,23 +40,23 @@ public class RsyncFileUpdaterExecutorTest {
         assertThat(rSyncFileUpdaterExecutor).isNotNull();
     }
 
-    @Test
-    void testExecution(){
-        //when
-        createResourcesFilesSetOne();
-        List<String> sourcesList = createSourcesList(setOne);
-        String destinationDirectory = userLocalDirectory.replace("\\", "/") + rsyncDirectory + "/";
-
-        //given
-        rSyncFileUpdaterExecutor
-                .setSources(sourcesList)
-                .setDestination(destinationDirectory)
-                .execute();
-
-        //then
-        validateAreFilesCopied(sourcesList);
-        deleteTestFiles(setOne);
-    }
+//    @Test
+//    void testExecution(){
+//        //when
+//        createResourcesFilesSetOne();
+//        List<String> sourcesList = createSourcesList(setOne);
+//        String destinationDirectory = userLocalDirectory.replace("\\", "/") + rsyncDirectory + "/";
+//
+//        //given
+//        rSyncFileUpdaterExecutor
+//                .setSources(sourcesList)
+//                .setDestination(destinationDirectory)
+//                .execute();
+//
+//        //then
+//        validateAreFilesCopied(sourcesList);
+//        deleteTestFiles(setOne);
+//    }
 
     private void deleteTestFiles(List<String> setOne) {
         for(String path : setOne){

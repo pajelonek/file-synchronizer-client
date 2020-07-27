@@ -29,20 +29,20 @@ public class FileUpdateRequestSenderTest {
         assertThat(fileUpdateRequestSender).isNotNull();
     }
 
-    @Test
-    void createUpdateFilesRequestTest(){
-        //when
-        List<UpdateFile> updateFileList = createUpdateFileList();
-
-        //given
-        HttpEntity<UpdateFilesRQ> updateFileRQEntity = fileUpdateRequestSender.createUpdateFilesRQ(updateFileList);
-
-        //then
-        assertThat(Objects.requireNonNull(updateFileRQEntity.getBody()).getMainFolder()).isNotNull();
-        assertThat(updateFileRQEntity.getBody().getHost()).isNotNull();
-        assertThat(updateFileRQEntity.getBody().getName()).isNotNull();
-        assertThat(updateFileRQEntity.getBody().getUpdateFile().size()).isEqualTo(setOne.size());
-    }
+//    @Test
+//    void createUpdateFilesRequestTest(){
+//        //when
+//        List<UpdateFile> updateFileList = createUpdateFileList();
+//
+//        //given
+//        HttpEntity<UpdateFilesRQ> updateFileRQEntity = fileUpdateRequestSender.createUpdateFilesRQ(updateFileList);
+//
+//        //then
+//        assertThat(Objects.requireNonNull(updateFileRQEntity.getBody()).getMainFolder()).isNotNull();
+//        assertThat(updateFileRQEntity.getBody().getHost()).isNotNull();
+//        assertThat(updateFileRQEntity.getBody().getName()).isNotNull();
+//        assertThat(updateFileRQEntity.getBody().getUpdateFile().size()).isEqualTo(setOne.size());
+//    }
 
 
     private List<UpdateFile> createUpdateFileList() {
