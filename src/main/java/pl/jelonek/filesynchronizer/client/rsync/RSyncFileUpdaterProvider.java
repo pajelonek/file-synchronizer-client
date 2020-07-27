@@ -16,7 +16,6 @@ import org.springframework.test.context.ContextConfiguration;
 import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Component
 @ContextConfiguration(classes = {RestTemplateConfig.class, HttpClientConfig.class})
@@ -31,6 +30,12 @@ public class RSyncFileUpdaterProvider {
 
     @Value("${ssh.hostname}")
     private String sshServerHostName;
+
+    @Value("${client.operating.system}")
+    private String clientOperatingSystem;
+
+    @Value("${server.operating.system}")
+    private String serverOperatingSystem;
 
     private String remoteMainFolder;
 
@@ -52,6 +57,7 @@ public class RSyncFileUpdaterProvider {
      * @param clientFileList is the list of all the files from client
      */
     public void processComparing(List<UpdateFile> serverFileList, List<UpdateFile> clientFileList) {
+        convertPathToServerOS(clientFileList);
         logger.info("Starting comparing files with server");
 
         List<UpdateFile> filesToUpdateOnClient = getExistingFilesToUpdate(serverFileList, clientFileList);
@@ -68,6 +74,29 @@ public class RSyncFileUpdaterProvider {
         logger.info("Found {} new files to delete on client", filesToDeleteOnClientList.size());
 
         deleteOnClient(filesToDeleteOnClientList);
+    }
+
+    public void convertPathToServerOS(List<UpdateFile> clientFileList) {
+        if(!clientOperatingSystem.equalsIgnoreCase(serverOperatingSystem)){
+            clientFileList = clientFileList.stream()
+                    .map(this::convertFilePathToOS)
+                    .collect(Collectors.toList());
+        }
+
+    }
+
+    private UpdateFile convertFilePathToOS(UpdateFile file) {
+        String presentSlash = getOsSlashForPaths(clientOperatingSystem);
+        String serverSlash = getOsSlashForPaths(serverOperatingSystem);
+
+        file.setFilePath(file.getFilePath().replace(presentSlash, serverSlash));
+        return file;
+    }
+
+    private String getOsSlashForPaths(String os) {
+        if(os.equalsIgnoreCase("WINDOWS"))
+            return "\\";
+        return "/";
     }
 
     /**
@@ -178,8 +207,9 @@ public class RSyncFileUpdaterProvider {
      * @param filesToUpdateOnClientList is list of the files to be updated in client directory
      */
     public void processOnClient(List<UpdateFile> filesToUpdateOnClientList) {
+        String getCorrectSlash = getOsSlashForPaths(serverOperatingSystem);
         filesToUpdateOnClientList.stream()
-                .collect(Collectors.groupingBy(fileToUpdate -> fileToUpdate.getFilePath().substring(0, fileToUpdate.getFilePath().lastIndexOf('\\'))))
+                .collect(Collectors.groupingBy(fileToUpdate -> fileToUpdate.getFilePath().substring(0, fileToUpdate.getFilePath().lastIndexOf(getCorrectSlash))))
                 .forEach((prefixOfPath, updateFileList) -> modifyFilesOnClient(updateFileList, prefixOfPath));
     }
 
@@ -201,7 +231,7 @@ public class RSyncFileUpdaterProvider {
         logger.info("Downloading {} file/files from server", sourcesList.toString());
         rSyncFileUpdaterExecutor
                 .setSources(sourcesList)
-                .setDestination(userLocalDirectory + prefixOfPath + "\\")
+                .setDestination(userLocalDirectory + prefixOfPath + getOsSlashForPaths(clientOperatingSystem))
                 .execute();
 
     }
@@ -213,8 +243,9 @@ public class RSyncFileUpdaterProvider {
      * @param filesToSendToServerList is the files from client to send to server
      */
     public void processOnServer(List<UpdateFile> filesToSendToServerList) {
+        String getCorrectSlash = getOsSlashForPaths(serverOperatingSystem);
         filesToSendToServerList.stream()
-                .collect(Collectors.groupingBy(fileToUpdate -> fileToUpdate.getFilePath().substring(0, fileToUpdate.getFilePath().lastIndexOf('\\'))))
+                .collect(Collectors.groupingBy(fileToUpdate -> fileToUpdate.getFilePath().substring(0, fileToUpdate.getFilePath().lastIndexOf(getCorrectSlash))))
                 .forEach((prefixOfPath, updateFileList) -> modifyFileOnServer(updateFileList, prefixOfPath));
     }
 
@@ -233,7 +264,7 @@ public class RSyncFileUpdaterProvider {
         logger.info("Modifying {} file/files on server", sources.toString());
         rSyncFileUpdaterExecutor
                 .setSources(sources)
-                .setDestination(sshServerHostName + ":" + remoteMainFolder + prefixOfPath + "\\")
+                .setDestination(sshServerHostName + ":" + remoteMainFolder + prefixOfPath + getOsSlashForPaths(serverOperatingSystem))
                 .execute();
 
         registerFilesOnServer(updateFileList);
