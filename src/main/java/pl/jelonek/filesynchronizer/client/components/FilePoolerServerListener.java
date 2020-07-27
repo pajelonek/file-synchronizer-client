@@ -57,7 +57,6 @@ public class FilePoolerServerListener implements Runnable {
             List<UpdateFile> filesToProcessOnClient = processForNewFiles(Objects.requireNonNull(fileLoggerResponseEntity.getBody()).getLogFileList());
 
             if (!filesToProcessOnClient.isEmpty()) {
-                rSyncFileUpdaterProvider.convertPathToServerOS(filesToProcessOnClient);
                 myFileChangeListener.addFilesFromServerToBuffer(addAsLogFileList(filesToProcessOnClient));
                 List<UpdateFile> filesToUpdateOnClient = getFilesToUpdateOnClient(filesToProcessOnClient);
                 logger.info("Found {} added/modified files to update on client", filesToProcessOnClient.size());

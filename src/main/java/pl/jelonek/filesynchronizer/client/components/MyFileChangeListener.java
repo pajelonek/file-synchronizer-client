@@ -58,7 +58,6 @@ public class MyFileChangeListener implements FileChangeListener {
         }
 
         List<UpdateFile> clientFileList = rSyncFileUpdaterProvider.mapToUpdateFileList(updatedFilesMap);
-        rSyncFileUpdaterProvider.convertPathToServerOS(clientFileList);
         rSyncFileUpdaterProvider.processForServer(clientFileList);
     }
 
