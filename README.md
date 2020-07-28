@@ -28,7 +28,7 @@ file.synchronizer.fileList.endpoint=/getFileList
 file.synchronizer.registerFiles.endpoint=/registerFiles
 file.synchronizer.removeFiles.endpoint=/removeFiles  
 file.synchronizer.logfile.endpoint=/getFileLogList  
-user.local.directory=C:\\clientFiles  
+user.local.directory=/home/osboxes/clientFiles
 rsync.remote.shell=ssh  
 ssh.hostname=server   
  ```
@@ -41,16 +41,19 @@ jest w przypadku diagnozowania błędów programisty.
 Do właściwości zdefiniowanych należą:
 -	client.name - jest to nazwa identyfikująca aplikację kliencką. Zalecane jest, aby dla każdej aplikacji wybrać 
 unikalną nazwę
--	environment
--	file.synchronizer.fileList.endpoint
--	file.synchronizer.setModificationDate.endpoint
--	file.synchronizer.removeFiles.endpoint
--	file.synchronizer.logfile.endpoint
--	user.local.directory
--	rsync.remote.shell
--	ssh.hostname
+-	environment - nazwa srodowiska (obecnie tylko PROD i TEST). Nie zmieniac.
+-	file.synchronizer.fileList.endpoint - statyczny endpoint potrzebny do api. Nie zmieniac.
+-	file.synchronizer.setModificationDate.endpoint - statyczny endpoint potrzebny do api. Nie zmieniac.
+-	file.synchronizer.removeFiles.endpoint - statyczny endpoint potrzebny do api. Nie zmieniac.
+-	file.synchronizer.logfile.endpoint - statyczny endpoint potrzebny do api. Nie zmieniac.
+-	user.local.directory - Sciezka folderu synchronizacyjnego klienta. przyklad: /home/osboxes/clientFiles
+-	rsync.remote.shell - dostepne tylko ssh. nie zmieniac.
+-	ssh.hostname - Nazwa serwera z pliku config ssh.
  
 ###2.	Konfiguracja rsync
+####Linux
+W przypadku systemu Linux, narzedzie rsync jest domyslnie dostepne.
+####Windows
 Aplikacja kliencka korzysta z biblioteki Rsync4J, która każdorazowo podczas procesu uruchamiania sprawdź istnienie 
 plików binarnych rsync, w przypadku nie znalezienia, pobiera wymagane pliki. Domyślnym miejsce pobrania plików 
 jest C:/Użytkownicy/Użytkownik/rsync4j.  
@@ -96,6 +99,7 @@ Należy pamiętać o wzorze, jaki należy przestrzegać wypełniając wartości 
 dla wybranego hosta, musimy być oddalona od początku linii o 5 spacji. Nieprzestrzeganie wzorca powoduje nie wczytanie 
 pliku “config” przez klienta ssh.
 ####4.3	Zmiana zabezpieczeń pliku “config” oraz kluczy ssh
+#####Windows
 Z powodu zaprojektowania SSH pod systemy rodziny UNIX, musimy zmienić uprawnienia pliku “config” oraz obu kluczy ssh 
 aby były poprawnie odczytywane przez protokół.
 
@@ -106,14 +110,24 @@ Dla każdego z wymienionych plików:
 4.	Wybierz “Wyłącz dziedziczenie”
 5.	Usuń dostęp wszystkich użytkowników z wyjątkiem użytkownika “System” oraz obecnie zalogowane
 6.	Wciśnij przycisk “Zastosuj”
- 
+#####Linux
+W przypadku systemu Linux, nalezy sprawdzic czy zalecane dostepy do plikow roznias sie od posiadanych.
+Zalecane zabezpieczenia:
+ - chmod 700 ~/.ssh
+ - chmod 644 ~/.ssh/authorized_keys
+ - chmod 644 ~/.ssh/known_hosts
+ - chmod 644 ~/.ssh/config
+ - chmod 600 ~/.ssh/id_rsa
+ - chmod 644 ~/.ssh/id_rsa.pub
 ####4.4 Wysyłanie klucza SSH na serwer
 Aby bezpiecznie skopiować klucz, należy najpierw przeprowadzić konfigurację aplikacji serwera, gdzie tworzymy plik 
 “authorized_keys”, który będzie przechowywać nasz klucz publiczny.
 Aby bezpiecznie skopiować pliki, należy otworzyć wiersz poleceń oraz wpisać:
-o	scp .ssh/id_rsa.pub SshHost:.ssh/authorized_keys
+```
+scp .ssh/id_rsa.pub SshHost:.ssh/authorized_keys
+```
 gdzie:
-•	SshHost - to nazwa hosta, którą wybraliśmy w pliku “config”.
+ - 	SshHost - to nazwa hosta, którą wybraliśmy w pliku “config”.
  
 ####4.5 Sprawdzanie poprawności konfiguracji
 Aby sprawdzić łączność z serwerem, należy otworzyć dowolny wiersz poleceń wpisać:
@@ -121,7 +135,7 @@ Aby sprawdzić łączność z serwerem, należy otworzyć dowolny wiersz polece�
 ssh sshHost
 ```
 Jeżeli po wpisaniu komendy zostałeś poprawnie połączony z serwerem ssh, konfiguracja przebiegła pomyślnie, w przeciwnym 
-wypadku**** powtórzenie konfiguracji aplikacji od początku.
+wypadku zalecane jest powtórzenie konfiguracji aplikacji od początku.
 ###5.	Uruchamianie testów
 Aby uruchomić testy aplikacji, uruchom wiersz linii komend w lokalizacji projektu a następnie wpisz:
 ```
