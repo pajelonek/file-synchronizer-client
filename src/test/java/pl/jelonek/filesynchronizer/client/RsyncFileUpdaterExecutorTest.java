@@ -1,7 +1,6 @@
 package pl.jelonek.filesynchronizer.client;
 
 import pl.jelonek.filesynchronizer.client.rsync.RSyncFileUpdaterExecutor;
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -60,7 +59,7 @@ public class RsyncFileUpdaterExecutorTest {
 
     private void deleteTestFiles(List<String> setOne) {
         for(String path : setOne){
-            String fixedPosix = path.replace(testDirectory.replace("/","\\"), rsyncDirectory.replace("/","\\"));
+            String fixedPosix = path.replace(testDirectory ,rsyncDirectory);
             String correctNewPath = userLocalDirectory + fixedPosix;
 
             File file = new File(correctNewPath);
@@ -94,7 +93,11 @@ public class RsyncFileUpdaterExecutorTest {
         try {
             for (String filePath : setOne) {
                 File file = new File(userLocalDirectory + filePath);
-                FileUtils.touch(file);
+                if(!file.exists()){
+                    if(file.createNewFile()){
+                        logger.info("Test file created");
+                    } else throw new Error("Could not create test file, check permissions");
+                }
                 file.deleteOnExit();
             }
         } catch (IOException e) {

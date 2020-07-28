@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import pl.jelonek.filesynchronizer.client.components.FilePoolerStartupRunner;
 import pl.jelonek.filesynchronizer.client.model.UpdateFile;
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -87,7 +86,11 @@ class FilePoolerStartupRunnerTest {
 
             for (String filePath : setOne) {
                 File file = new File(userLocalDirectory + filePath);
-                FileUtils.touch(file);
+                if(!file.exists()){
+                    if(file.createNewFile()){
+                        logger.info("Test file created");
+                    } else throw new Error("Could not create test file, check permissions");
+                }
                 file.deleteOnExit();
             }
 
