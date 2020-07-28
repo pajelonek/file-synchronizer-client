@@ -41,18 +41,18 @@ jest w przypadku diagnozowania błędów programisty.
 Do właściwości zdefiniowanych należą:
 -	client.name - jest to nazwa identyfikująca aplikację kliencką. Zalecane jest, aby dla każdej aplikacji wybrać 
 unikalną nazwę
--	environment - nazwa srodowiska (obecnie tylko PROD i TEST). Nie zmieniac.
--	file.synchronizer.fileList.endpoint - statyczny endpoint potrzebny do api. Nie zmieniac.
--	file.synchronizer.setModificationDate.endpoint - statyczny endpoint potrzebny do api. Nie zmieniac.
--	file.synchronizer.removeFiles.endpoint - statyczny endpoint potrzebny do api. Nie zmieniac.
--	file.synchronizer.logfile.endpoint - statyczny endpoint potrzebny do api. Nie zmieniac.
--	user.local.directory - Sciezka folderu synchronizacyjnego klienta. przyklad: /home/osboxes/clientFiles
--	rsync.remote.shell - dostepne tylko ssh. nie zmieniac.
+-	environment - nazwa środowiska (obecnie tylko PROD i TEST). Nie zmieniać.
+-	file.synchronizer.fileList.endpoint - statyczny endpoint potrzebny do api. Nie zmieniać.
+-	file.synchronizer.setModificationDate.endpoint - statyczny endpoint potrzebny do api. Nie zmieniać.
+-	file.synchronizer.removeFiles.endpoint - statyczny endpoint potrzebny do api. Nie zmieniać.
+-	file.synchronizer.logfile.endpoint - statyczny endpoint potrzebny do api. Nie zmieniać.
+-	user.local.directory - Scieżka folderu synchronizacyjnego klienta. przykład: /home/osboxes/clientFiles
+-	rsync.remote.shell - dostepne tylko ssh. nie zmieniać.
 -	ssh.hostname - Nazwa serwera z pliku config ssh.
  
 ###2.	Konfiguracja rsync
 ####Linux
-W przypadku systemu Linux, narzedzie rsync jest domyslnie dostepne.
+W przypadku systemu Linux, narzędzie rsync jest domyślnie dostępne.
 ####Windows
 Aplikacja kliencka korzysta z biblioteki Rsync4J, która każdorazowo podczas procesu uruchamiania sprawdź istnienie 
 plików binarnych rsync, w przypadku nie znalezienia, pobiera wymagane pliki. Domyślnym miejsce pobrania plików 
@@ -111,7 +111,7 @@ Dla każdego z wymienionych plików:
 5.	Usuń dostęp wszystkich użytkowników z wyjątkiem użytkownika “System” oraz obecnie zalogowane
 6.	Wciśnij przycisk “Zastosuj”
 #####Linux
-W przypadku systemu Linux, nalezy sprawdzic czy zalecane dostepy do plikow roznias sie od posiadanych.
+W przypadku systemu Linux, należy sprawdzić czy zalecane dostępy do plików roznią sie od posiadanych.
 Zalecane zabezpieczenia:
  - chmod 700 ~/.ssh
  - chmod 644 ~/.ssh/authorized_keys
