@@ -96,7 +96,7 @@ zmienna “ssh.hostname” z pliku application.properties.
 -	HostName - adres sieciowy komputera z uruchomionym serwerem ssh.
 -	User - nazwa użytkownika, który uruchamia w swojej przestrzeni dyskowej aplikacji serwerową rozwiązania
 Należy pamiętać o wzorze, jaki należy przestrzegać wypełniając wartości pliku “config”. Każda właściwość definiowana 
-dla wybranego hosta, musimy być oddalona od początku linii o 5 spacji. Nieprzestrzeganie wzorca powoduje nie wczytanie 
+dla wybranego hosta, musimy być oddalona od początku linii. Nieprzestrzeganie wzorca powoduje nie wczytanie 
 pliku “config” przez klienta ssh.
 ####4.3	Zmiana zabezpieczeń pliku “config” oraz kluczy ssh
 #####Windows
