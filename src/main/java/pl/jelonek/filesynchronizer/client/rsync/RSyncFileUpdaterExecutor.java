@@ -33,7 +33,7 @@ public class RSyncFileUpdaterExecutor {
                     .outputCommandline(true)
                     .verbose(true)
                     .protectArgs(true)
-                    .compress(true)
+//                    .compress(true)
                     .archive(true)
                     .rsh(rsh);
 
