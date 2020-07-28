@@ -69,7 +69,13 @@ Spowoduje to pobranie wszystkich wymaganych zależności określonych w pliku po
 wyświetlenia w wierszu poleceń komunikatu “BUILD SUCCESS” instalacja przebiegła pomyślnie.
 ###4.	Konfiguracja OpenSSH Client
 ####4.1	Generowanie kluczy ssh
+#####Windows
 Otwórz dowolny wiersz linii komend w miejscu, które wybrałeś na przechowywanie plików binarnych rsync i następnie wpisz:
+ ```
+ssh-keygen
+ ```
+#####Linux
+Otwórz swój lokalny folder .ssh znajdujący się w katalogu użytkownika i wpisz:
  ```
 ssh-keygen
  ```
@@ -111,7 +117,7 @@ Dla każdego z wymienionych plików:
 5.	Usuń dostęp wszystkich użytkowników z wyjątkiem użytkownika “System” oraz obecnie zalogowane
 6.	Wciśnij przycisk “Zastosuj”
 #####Linux
-W przypadku systemu Linux, należy sprawdzić czy zalecane dostępy do plików roznią sie od posiadanych.
+W przypadku systemu Linux, należy sprawdzić czy zalecane dostępy do plików różnią się od posiadanych.
 Zalecane zabezpieczenia:
  - chmod 700 ~/.ssh
  - chmod 644 ~/.ssh/authorized_keys
@@ -135,7 +141,7 @@ Aby sprawdzić łączność z serwerem, należy otworzyć dowolny wiersz polece�
 ssh sshHost
 ```
 Jeżeli po wpisaniu komendy zostałeś poprawnie połączony z serwerem ssh, konfiguracja przebiegła pomyślnie, w przeciwnym 
-wypadku zalecane jest powtórzenie konfiguracji aplikacji od początku.
+w przeciwnym razie zalecane jest powtórzenie konfiguracji aplikacji od początku.
 ###5.	Uruchamianie testów
 Aby uruchomić testy aplikacji, uruchom wiersz linii komend w lokalizacji projektu a następnie wpisz:
 ```
