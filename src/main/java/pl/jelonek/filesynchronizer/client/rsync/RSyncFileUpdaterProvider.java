@@ -42,10 +42,10 @@ public class RSyncFileUpdaterProvider {
 
     /**
      * This method its the logic which leads the process of compering files.
-     * It sorts files to the ones to be downloaded from server, deleted on client and ones which
-     * not required any action.
-     * At the start of the application we !DO NOT SEND ANY CHANGES TO SERVER!, we only update our directory
-     * to match the one on our server.
+     * It sorts files to the ones to be downloaded on server and on client under certain rules:
+     * - if file is present on client but isn't on server, it is being sent to server
+     * - if file is present on server but isn't on client, it is being sent to client
+     * - if file is present both on client and server, it is being sent to server IF its modification date is newer on server
      *
      * @param serverFileList is the list of all the files from server
      * @param clientFileList is the list of all the files from client
@@ -53,20 +53,30 @@ public class RSyncFileUpdaterProvider {
     public void processComparing(List<UpdateFile> serverFileList, List<UpdateFile> clientFileList) {
         logger.info("Starting comparing files with server");
 
+        List<UpdateFile> filesToUpdateOnServer = getFilesToSendToServer(serverFileList, clientFileList);
+        logger.info("Found {} files to update on server", filesToUpdateOnServer.size());
+
+        processOnServer(filesToUpdateOnServer);
+
+        List<UpdateFile> newFilesToUpdateOnClient = getNewFilesToUploadOnClient(serverFileList, clientFileList);
+        logger.info("Found {} files to update on client", newFilesToUpdateOnClient.size());
+
         List<UpdateFile> filesToUpdateOnClient = getExistingFilesToUpdate(serverFileList, clientFileList);
         logger.info("Found {} files to update on client", filesToUpdateOnClient.size());
 
-        List<UpdateFile> filesNotFoundOnClient = getNewFilesToUploadOnClient(serverFileList, clientFileList);
-        logger.info("Found {} new files to download on client", filesNotFoundOnClient.size());
-
-        List<UpdateFile> filesToDownloadOnClient = ListUtils.union(filesToUpdateOnClient, filesNotFoundOnClient);
+        List<UpdateFile> filesToDownloadOnClient = ListUtils.union(filesToUpdateOnClient, newFilesToUpdateOnClient);
 
         processOnClient(filesToDownloadOnClient);
+    }
 
-        List<UpdateFile> filesToDeleteOnClientList = getFilesToDeleteOnClient(serverFileList, clientFileList);
-        logger.info("Found {} new files to delete on client", filesToDeleteOnClientList.size());
+    private List<UpdateFile> getFilesToSendToServer(List<UpdateFile> serverFileList, List<UpdateFile> clientFileList) {
+        List<String> serverFileNames = serverFileList.stream()
+                .map(UpdateFile::getFilePath)
+                .collect(Collectors.toList());
 
-        deleteOnClient(filesToDeleteOnClientList);
+        return clientFileList.stream()
+                .filter(clientFile -> !serverFileNames.contains(clientFile.getFilePath()))
+                .collect(Collectors.toList());
     }
 
     /**
